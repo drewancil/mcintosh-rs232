@@ -4,8 +4,10 @@ from enum import Enum
 
 BAUD_RATE = 115200
 COMMAND_TIMEOUT = 2.0  # seconds to wait for a query response
+POWER_ON_TIMEOUT = 10.0  # seconds to wait for amp to finish booting
+POWER_ON_SELFTEST_DELAY = 5.0  # seconds to wait for amp self-test after power-on echo
 QUERY_STATE_DELAY = 0.3  # seconds to wait for QRY responses to arrive
-TERMCHAR = b"}"
+TERMCHAR = b"\x00"
 
 # Volume range
 MIN_VOLUME = 0

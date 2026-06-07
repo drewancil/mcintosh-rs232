@@ -26,6 +26,7 @@ class AmplifierState:
     firmware_version: str | None = None
     serial_number: str | None = None
     da_version: str | None = None
+    model: str | None = None
 
     def copy(self) -> AmplifierState:
         """Return a shallow copy of this state."""

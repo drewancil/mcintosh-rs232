@@ -2,7 +2,7 @@
 
 Async Python library to control McIntosh integrated amplifiers over RS232 serial, built on [serialx](https://github.com/puddly/serialx).
 
-Developed and tested against the **MA5300** Integrated Amplifier. The RS232 protocol is common across McIntosh's integrated amplifier line, so other models should work with little or no changes.
+Developed and tested against the **McIntosh MA5300** Integrated Amplifier. The RS232 protocol is common across McIntosh's integrated amplifier line, so other models should work with little or no changes.
 
 ## Installation
 
@@ -42,11 +42,33 @@ asyncio.run(main())
 A built-in CLI lets you quickly test your serial connection:
 
 ```bash
-# Query and print amplifier status
-python -m mcintosh_rs232 /dev/ttyUSB0
+# Query and print amplifier state
+python -m mcintosh_rs232 /dev/ttyS0
 
 # Set a maximum volume limit
-python -m mcintosh_rs232 /dev/ttyUSB0 --max-volume 80
+python -m mcintosh_rs232 /dev/ttyS0 --max-volume 80
+
+# Power
+python -m mcintosh_rs232 /dev/ttyS0 --power on
+python -m mcintosh_rs232 /dev/ttyS0 --power off
+
+# Volume (mutually exclusive)
+python -m mcintosh_rs232 /dev/ttyS0 --volume 35
+python -m mcintosh_rs232 /dev/ttyS0 --volume-up
+python -m mcintosh_rs232 /dev/ttyS0 --volume-down
+
+# All other controls
+python -m mcintosh_rs232 /dev/ttyS0 --mute on
+python -m mcintosh_rs232 /dev/ttyS0 --input USB
+python -m mcintosh_rs232 /dev/ttyS0 --balance 10
+python -m mcintosh_rs232 /dev/ttyS0 --tone on --bass 4 --treble -2
+python -m mcintosh_rs232 /dev/ttyS0 --tone-mode stereo
+python -m mcintosh_rs232 /dev/ttyS0 --input-trim -3
+python -m mcintosh_rs232 /dev/ttyS0 --meter-lights on
+python -m mcintosh_rs232 /dev/ttyS0 --display-brightness 3
+
+# Multiple commands in one call
+python -m mcintosh_rs232 /dev/ttyS0 --volume 40 --input BALANCED --mute off
 ```
 
 ## Features

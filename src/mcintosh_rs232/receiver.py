@@ -11,7 +11,6 @@ from collections.abc import Callable
 import serialx
 
 from .const import (
-    _QUERYABLE_PARAMS,
     BAUD_RATE,
     COMMAND_TIMEOUT,
     MAX_BALANCE,
@@ -26,6 +25,8 @@ from .const import (
     MIN_INPUT_TRIM,
     MIN_TREBLE,
     MIN_VOLUME,
+    POWER_ON_SELFTEST_DELAY,
+    POWER_ON_TIMEOUT,
     TERMCHAR,
     InputSource,
     ToneMode,
@@ -50,7 +51,7 @@ class McIntoshReceiver:
 
     Typical usage::
 
-        receiver = McIntoshReceiver("/dev/ttyUSB0")
+        receiver = McIntoshReceiver("/dev/serial0")
         await receiver.connect()
         await receiver.query_state()
         print(receiver.state)
@@ -116,7 +117,7 @@ class McIntoshReceiver:
         the command timeout.
         """
         if sys.platform.startswith("linux"):
-            from serialx.platforms import serial_linux  # type: ignore[import-untyped]
+            from serialx.platforms import serial_linux
 
             # The TIOCSSERIAL ioctl requires elevated permissions on some Linux
             # serial devices (e.g. Raspberry Pi).  Nulling it out disables the
@@ -135,16 +136,16 @@ class McIntoshReceiver:
         self._connected = True
         self._read_task = asyncio.create_task(self._read_loop())
 
-        # Enable unsolicited status updates from the amplifier.
-        await self._send_command("STA", "1")
-
         try:
-            await self.query_power()
+            await self._query_all()
         except TimeoutError:
             await self.disconnect()
             raise ConnectionError(
                 f"No response from amplifier on {self._port}"
             ) from None
+
+        # Enable unsolicited status updates from the amplifier.
+        await self._send_command("STA", "1")
 
         _LOGGER.info("Connected to McIntosh amplifier on %s", self._port)
 
@@ -156,16 +157,20 @@ class McIntoshReceiver:
     # -- Power --
 
     async def power_on(self) -> None:
-        """Turn the amplifier on."""
-        await self._send_command("PWR", "1")
+        """Turn the amplifier on and wait for it to finish booting."""
+        await self._send_command_and_wait("PWR", "1", timeout=POWER_ON_TIMEOUT)
+        # Amp runs a self-test after the boot echo; commands are queued but
+        # not echoed back until it completes.
+        await asyncio.sleep(POWER_ON_SELFTEST_DELAY)
 
     async def power_off(self) -> None:
         """Turn the amplifier off."""
-        await self._send_command("PWR", "0")
+        await self._send_command_and_wait("PWR", "0")
 
     async def query_power(self) -> bool:
         """Query and return the current power state."""
-        return int(await self._query("PWR")) != 0
+        await self._query_all()
+        return self._state.power is True
 
     # -- Volume --
 
@@ -195,7 +200,8 @@ class McIntoshReceiver:
 
     async def query_volume(self) -> int:
         """Query and return the current volume level."""
-        return int(await self._query("VOL"))
+        await self._query_all()
+        return self._state.volume or 0
 
     # -- Mute --
 
@@ -209,7 +215,8 @@ class McIntoshReceiver:
 
     async def query_mute(self) -> bool:
         """Query and return the current mute state."""
-        return int(await self._query("MUT")) != 0
+        await self._query_all()
+        return self._state.mute is True
 
     # -- Input source --
 
@@ -219,7 +226,8 @@ class McIntoshReceiver:
 
     async def query_input(self) -> InputSource:
         """Query and return the current input source."""
-        return InputSource(int(await self._query("INP")))
+        await self._query_all()
+        return self._state.input_source or InputSource(1)
 
     # -- Balance --
 
@@ -234,7 +242,8 @@ class McIntoshReceiver:
 
     async def query_balance(self) -> int:
         """Query and return the current balance."""
-        return int(await self._query("TBA"))
+        await self._query_all()
+        return self._state.balance or 0
 
     # -- Tone controls --
 
@@ -248,7 +257,8 @@ class McIntoshReceiver:
 
     async def query_tone(self) -> bool:
         """Query and return whether tone controls are enabled."""
-        return int(await self._query("TTN")) != 0
+        await self._query_all()
+        return self._state.tone_enabled is True
 
     async def set_bass(self, bass: int) -> None:
         """Set bass level (``MIN_BASS`` to ``MAX_BASS``)."""
@@ -258,7 +268,8 @@ class McIntoshReceiver:
 
     async def query_bass(self) -> int:
         """Query and return the current bass level."""
-        return int(await self._query("TTB"))
+        await self._query_all()
+        return self._state.bass or 0
 
     async def set_treble(self, treble: int) -> None:
         """Set treble level (``MIN_TREBLE`` to ``MAX_TREBLE``)."""
@@ -268,7 +279,8 @@ class McIntoshReceiver:
 
     async def query_treble(self) -> int:
         """Query and return the current treble level."""
-        return int(await self._query("TTT"))
+        await self._query_all()
+        return self._state.treble or 0
 
     # -- Input trim --
 
@@ -282,7 +294,8 @@ class McIntoshReceiver:
 
     async def query_input_trim(self) -> int:
         """Query and return the current input trim."""
-        return int(await self._query("TIN"))
+        await self._query_all()
+        return self._state.input_trim or 0
 
     # -- Tone mode --
 
@@ -292,7 +305,8 @@ class McIntoshReceiver:
 
     async def query_tone_mode(self) -> ToneMode:
         """Query and return the current tone mode."""
-        return ToneMode(int(await self._query("TMO")))
+        await self._query_all()
+        return self._state.tone_mode or ToneMode(0)
 
     # -- Meter lights --
 
@@ -321,18 +335,16 @@ class McIntoshReceiver:
     async def query_state(self) -> None:
         """Query all current state from the amplifier.
 
-        Subscriber notifications are suppressed while the queries run and
-        fired once at the end if any value changed.  Power state is excluded
-        as it is queried during :meth:`connect`.
+        Sends ``(QRY)`` which returns the full state in a single response.
+        Subscriber notifications are suppressed while the query runs and
+        fired once at the end if any value changed.
         """
         self._batching = True
         self._batch_changed = False
         try:
-            for param in _QUERYABLE_PARAMS:
-                try:
-                    await self._query(param)
-                except TimeoutError:
-                    _LOGGER.debug("No response for query %s", param)
+            await self._query_all()
+        except TimeoutError:
+            _LOGGER.debug("No response to QRY")
         finally:
             self._batching = False
 
@@ -340,6 +352,58 @@ class McIntoshReceiver:
             self._notify_subscribers()
 
     # -- Internal helpers --
+
+    async def _query_all(self) -> None:
+        """Send ``(QRY)`` and wait for the amplifier's full state response.
+
+        Registers a pending query on ``PWR`` (which is always present in the
+        QRY response) so the caller can ``await`` the round-trip.
+        """
+        assert self._writer is not None
+        loop = asyncio.get_running_loop()
+        future: asyncio.Future[str] = loop.create_future()
+        pending = PendingQuery(key="PWR", future=future)
+        self._pending_queries.append(pending)
+        try:
+            msg = b"(QRY)"
+            _LOGGER.debug("Sending: %s", msg)
+            try:
+                async with self._write_lock:
+                    self._writer.write(msg)
+                    await self._writer.drain()
+            except Exception:
+                _LOGGER.exception("Error writing to serial port")
+                await self._teardown()
+                raise
+            await asyncio.wait_for(future, timeout=COMMAND_TIMEOUT)
+        finally:
+            if pending in self._pending_queries:
+                self._pending_queries.remove(pending)
+
+    async def _send_command_and_wait(
+        self, key: str, value: str, timeout: float = COMMAND_TIMEOUT
+    ) -> None:
+        """Send a ``(KEY VALUE)`` command and wait for the echo from the amp."""
+        assert self._writer is not None
+        loop = asyncio.get_running_loop()
+        future: asyncio.Future[str] = loop.create_future()
+        pending = PendingQuery(key=key, future=future)
+        self._pending_queries.append(pending)
+        try:
+            msg = f"({key} {value})".encode("ascii")
+            _LOGGER.debug("Sending: %s", msg)
+            try:
+                async with self._write_lock:
+                    self._writer.write(msg)
+                    await self._writer.drain()
+            except Exception:
+                _LOGGER.exception("Error writing to serial port")
+                await self._teardown()
+                raise
+            await asyncio.wait_for(future, timeout=timeout)
+        finally:
+            if pending in self._pending_queries:
+                self._pending_queries.remove(pending)
 
     async def _send_command(self, key: str, value: str) -> None:
         """Write a ``(KEY VALUE)`` command to the amplifier."""
@@ -407,7 +471,18 @@ class McIntoshReceiver:
 
         while self._connected:
             try:
-                data = await self._reader.read(256)
+                data = await asyncio.wait_for(self._reader.read(256), timeout=0.2)
+            except TimeoutError:
+                # No data for 200ms — flush any unterminated packet in the buffer.
+                # This handles the power-off case where the amp responds to (QRY)
+                # without a trailing null terminator.
+                if buf:
+                    text = buf.lstrip(TERMCHAR).decode("ascii", 
+                                                       errors="replace").strip()
+                    if text:
+                        self._process_packet(text)
+                    buf = b""
+                continue
             except Exception:
                 if not self._connected:
                     return
@@ -497,6 +572,8 @@ class McIntoshReceiver:
                 return self._set_state_value("firmware_version", value)
             if key == "DAV":
                 return self._set_state_value("da_version", value)
+            if key == "MODEL":
+                return self._set_state_value("model", value)
         except ValueError:
             _LOGGER.warning("Could not parse token %s=%s", key, value)
             return False

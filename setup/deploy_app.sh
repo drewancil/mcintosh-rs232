@@ -12,21 +12,21 @@ rsync -am \
     --exclude='.pytest_cache/' \
     --exclude='.ruff_cache/' \
     --exclude='.venv/' \
-    --exclude='.vscode/' \
     --exclude='.git/' \
     --exclude='.gitignore' \
     --exclude='.DS_Store' \
     --exclude='*.log*' \
     --exclude='.pylintrc' \
-    --exclude='*.code-workspace' \
     --exclude='backup/' \
     --exclude='images/' \
     --exclude='*.jpg' \
-    --exclude='reference_material/' \
-    --exclude='setup/' \
-    '/Users/andrew/Development/denon-rs232/' \
-    sagebrush@mac2mqtt.crampedcell.com:/home/sagebrush/mcintosh
+    '/Users/andrew/Development/mcintosh-rs232/' \
+    sagebrush@mac2mqtt.crampedcell.com:/home/sagebrush/mcintosh-rs232
 
 #echo "Deployment complete - please restart the server to apply changes"
 echo
 
+
+#--exclude='.vscode/' \
+#--exclude='*.code-workspace' \
+#--exclude='reference_material/' \
