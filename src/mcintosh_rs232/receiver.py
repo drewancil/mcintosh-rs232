@@ -5,7 +5,6 @@ from __future__ import annotations
 import asyncio
 import contextlib
 import logging
-import sys
 from collections.abc import Callable
 
 import serialx
@@ -116,21 +115,28 @@ class McIntoshReceiver:
         Raises :exc:`ConnectionError` if the amplifier does not respond within
         the command timeout.
         """
-        if sys.platform.startswith("linux"):
-            from serialx.platforms import serial_linux
+        #if sys.platform.startswith("linux"):
+        #    from serialx.platforms import serial_linux
 
             # The TIOCSSERIAL ioctl requires elevated permissions on some Linux
             # serial devices (e.g. Raspberry Pi).  Nulling it out disables the
             # low-latency ioctl call inside serialx so the connection proceeds
             # without needing special permissions.
-            serial_linux.TIOCSSERIAL = None
+        #    serial_linux.TIOCSSERIAL = None
+        
 
         connect_kwargs: dict[str, object] = {"baudrate": BAUD_RATE}
-        if sys.platform.startswith("linux"):
-            connect_kwargs["low_latency"] = False
+        #if sys.platform.startswith("linux"):
+        #    connect_kwargs["low_latency"] = False
+        if True:
+            connect_kwargs["key"] = "bhMn8ROVmBv46hf6PxoR1zcRXsNW59McTrOzsYpXluI="
+            connect_kwargs["url"] = "esphome://192.168.4.160:6053/?port_name=mcintosh_proxy"
 
+        #self._reader, self._writer = await serialx.open_serial_connection(
+        #    self._port,
+        #    **connect_kwargs,
+        #)
         self._reader, self._writer = await serialx.open_serial_connection(
-            self._port,
             **connect_kwargs,
         )
         self._connected = True
