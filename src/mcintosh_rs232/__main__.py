@@ -3,25 +3,27 @@
 Usage::
 
     # Print current state
-    python -m mcintosh_rs232 /dev/ttyS0
+    python -m mcintosh_rs232 --port /dev/ttyS0
 
     # Power on/off
-    python -m mcintosh_rs232 /dev/ttyS0 --power on
-    python -m mcintosh_rs232 /dev/ttyS0 --power off
+    python -m mcintosh_rs232 --port /dev/ttyS0 --power on
+    python -m mcintosh_rs232 --port /dev/ttyS0 --power off
 
     # Set volume, mute, input, tone controls
-    python -m mcintosh_rs232 /dev/ttyS0 --volume 35
-    python -m mcintosh_rs232 /dev/ttyS0 --mute on
-    python -m mcintosh_rs232 /dev/ttyS0 --input USB
-    python -m mcintosh_rs232 /dev/ttyS0 --bass 4 --treble -2
-    python -m mcintosh_rs232 /dev/ttyS0 --balance 10
-    python -m mcintosh_rs232 /dev/ttyS0 --tone on --tone-mode stereo
-    python -m mcintosh_rs232 /dev/ttyS0 --input-trim -3
-    python -m mcintosh_rs232 /dev/ttyS0 --meter-lights on
-    python -m mcintosh_rs232 /dev/ttyS0 --display-brightness 3
+    python -m mcintosh_rs232 --port /dev/ttyS0 --volume 35
+    python -m mcintosh_rs232 --port /dev/ttyS0 --volume-up
+    python -m mcintosh_rs232 --port /dev/ttyS0 --volume-down
+    python -m mcintosh_rs232 --port /dev/ttyS0 --mute on
+    python -m mcintosh_rs232 --port /dev/ttyS0 --input USB
+    python -m mcintosh_rs232 --port /dev/ttyS0 --bass 4 --treble -2
+    python -m mcintosh_rs232 --port /dev/ttyS0 --balance 10
+    python -m mcintosh_rs232 --port /dev/ttyS0 --tone on --tone-mode stereo
+    python -m mcintosh_rs232 --port /dev/ttyS0 --input-trim -3
+    python -m mcintosh_rs232 --port /dev/ttyS0 --meter-lights on
+    python -m mcintosh_rs232 --port /dev/ttyS0 --display-brightness 3
 
     # Combine multiple commands in one call
-    python -m mcintosh_rs232 /dev/ttyS0 --volume 40 --input BALANCED --mute off
+    python -m mcintosh_rs232 --port /dev/ttyS0 --volume 40 --input BALANCED --mute off
 """
 
 from __future__ import annotations
@@ -65,7 +67,7 @@ def _fmt_enum(val: object | None) -> str:
     if val is None:
         return "?"
     if hasattr(val, "name"):
-        return str(val.name)  #type: ignore[unused-ignore]
+        return str(val.name)  # type: ignore[unused-ignore]
     return str(val)
 
 
@@ -162,8 +164,7 @@ async def _main(args: argparse.Namespace) -> int:
                 source = InputSource[args.input.upper()]
             except KeyError:
                 names = ", ".join(s.name for s in InputSource)
-                print(f"Unknown input {args.input!r}. "
-                        f"Valid inputs: {names}", file=sys.stderr)
+                print(f"Unknown input {args.input!r}. Valid inputs: {names}", file=sys.stderr)
                 return 1
             print(f"Setting input to {source.name} ...")
             await receiver.select_input(source)
@@ -241,7 +242,10 @@ def main() -> None:
         description="McIntosh RS232 CLI — control and query the amplifier.",
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
-    parser.add_argument("port", help="Serial port (e.g. /dev/ttyS0 or COM3)")
+    parser.add_argument(
+        "--port", type=str, required=True, help="Serial port (e.g. /dev/ttyS0 or COM3)"
+    )
+
     parser.add_argument(
         "--max-volume",
         type=int,
@@ -292,8 +296,7 @@ def main() -> None:
         "--balance",
         type=int,
         metavar="N",
-        help=f"Set balance ({MIN_BALANCE} "
-                f"to {MAX_BALANCE}, negative=left, positive=right)",
+        help=f"Set balance ({MIN_BALANCE} to {MAX_BALANCE}, negative=left, positive=right)",
     )
 
     parser.add_argument(
@@ -337,8 +340,7 @@ def main() -> None:
         "--display-brightness",
         type=int,
         metavar="N",
-        help="Set display brightness "
-                f"({MIN_DISPLAY_BRIGHTNESS}–{MAX_DISPLAY_BRIGHTNESS})",
+        help=f"Set display brightness ({MIN_DISPLAY_BRIGHTNESS}–{MAX_DISPLAY_BRIGHTNESS})",
     )
 
     args = parser.parse_args()

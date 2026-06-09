@@ -61,9 +61,7 @@ class McIntoshReceiver:
         self._port = port
         self._max_volume = max_volume
         self._reader: asyncio.StreamReader | None = None
-        self._writer: serialx.SerialStreamWriter[serialx.BaseSerialTransport] | None = (
-            None
-        )
+        self._writer: serialx.SerialStreamWriter[serialx.BaseSerialTransport] | None = None
         self._read_task: asyncio.Task[None] | None = None
         self._state = AmplifierState()
         self._subscribers: list[StateCallback] = []
@@ -72,8 +70,6 @@ class McIntoshReceiver:
         self._connected = False
         self._batching = False
         self._batch_changed = False
-
-    # -- Properties --
 
     @property
     def state(self) -> AmplifierState:
@@ -95,8 +91,6 @@ class McIntoshReceiver:
         """Return the configured maximum volume."""
         return self._max_volume
 
-    # -- Subscription --
-
     def subscribe(self, callback: StateCallback) -> Callable[[], None]:
         """Subscribe to state changes.
 
@@ -107,35 +101,32 @@ class McIntoshReceiver:
         self._subscribers.append(callback)
         return lambda: self._subscribers.remove(callback)
 
-    # -- Connection --
-
     async def connect(self) -> None:
         """Open the serial connection and verify the amplifier is responding.
 
         Raises :exc:`ConnectionError` if the amplifier does not respond within
         the command timeout.
         """
-        #if sys.platform.startswith("linux"):
+        # if sys.platform.startswith("linux"):
         #    from serialx.platforms import serial_linux
 
-            # The TIOCSSERIAL ioctl requires elevated permissions on some Linux
-            # serial devices (e.g. Raspberry Pi).  Nulling it out disables the
-            # low-latency ioctl call inside serialx so the connection proceeds
-            # without needing special permissions.
+        # The TIOCSSERIAL ioctl requires elevated permissions on some Linux
+        # serial devices (e.g. Raspberry Pi).  Nulling it out disables the
+        # low-latency ioctl call inside serialx so the connection proceeds
+        # without needing special permissions.
         #    serial_linux.TIOCSSERIAL = None
-        
 
         connect_kwargs: dict[str, object] = {"baudrate": BAUD_RATE}
-        #if sys.platform.startswith("linux"):
+        # if sys.platform.startswith("linux"):
         #    connect_kwargs["low_latency"] = False
         if True:
             connect_kwargs["key"] = "bhMn8ROVmBv46hf6PxoR1zcRXsNW59McTrOzsYpXluI="
             connect_kwargs["url"] = "esphome://192.168.4.160:6053/?port_name=mcintosh_proxy"
 
-        #self._reader, self._writer = await serialx.open_serial_connection(
+        # self._reader, self._writer = await serialx.open_serial_connection(
         #    self._port,
         #    **connect_kwargs,
-        #)
+        # )
         self._reader, self._writer = await serialx.open_serial_connection(
             **connect_kwargs,
         )
@@ -146,9 +137,7 @@ class McIntoshReceiver:
             await self._query_all()
         except TimeoutError:
             await self.disconnect()
-            raise ConnectionError(
-                f"No response from amplifier on {self._port}"
-            ) from None
+            raise ConnectionError(f"No response from amplifier on {self._port}") from None
 
         # Enable unsolicited status updates from the amplifier.
         await self._send_command("STA", "1")
@@ -160,8 +149,6 @@ class McIntoshReceiver:
         await self._teardown()
         _LOGGER.info("Disconnected from McIntosh amplifier")
 
-    # -- Power --
-
     async def power_on(self) -> None:
         """Turn the amplifier on and wait for it to finish booting."""
         await self._send_command_and_wait("PWR", "1", timeout=POWER_ON_TIMEOUT)
@@ -171,21 +158,17 @@ class McIntoshReceiver:
 
     async def power_off(self) -> None:
         """Turn the amplifier off."""
-        await self._send_command_and_wait("PWR", "0")
+        await self._send_command("PWR", "0")
 
     async def query_power(self) -> bool:
         """Query and return the current power state."""
         await self._query_all()
         return self._state.power is True
 
-    # -- Volume --
-
     async def set_volume(self, volume: int) -> None:
         """Set the volume level (``MIN_VOLUME`` to ``max_volume``)."""
         if not MIN_VOLUME <= volume <= self._max_volume:
-            raise ValueError(
-                f"Volume must be between {MIN_VOLUME} and {self._max_volume}"
-            )
+            raise ValueError(f"Volume must be between {MIN_VOLUME} and {self._max_volume}")
         await self._send_command("VOL", str(volume))
 
     async def volume_up(self) -> None:
@@ -209,8 +192,6 @@ class McIntoshReceiver:
         await self._query_all()
         return self._state.volume or 0
 
-    # -- Mute --
-
     async def mute_on(self) -> None:
         """Mute the amplifier."""
         await self._send_command("MUT", "1")
@@ -224,8 +205,6 @@ class McIntoshReceiver:
         await self._query_all()
         return self._state.mute is True
 
-    # -- Input source --
-
     async def select_input(self, source: InputSource) -> None:
         """Select an input source."""
         await self._send_command("INP", str(source.value))
@@ -234,8 +213,6 @@ class McIntoshReceiver:
         """Query and return the current input source."""
         await self._query_all()
         return self._state.input_source or InputSource(1)
-
-    # -- Balance --
 
     async def set_balance(self, balance: int) -> None:
         """Set balance (``MIN_BALANCE`` to ``MAX_BALANCE``).
@@ -250,8 +227,6 @@ class McIntoshReceiver:
         """Query and return the current balance."""
         await self._query_all()
         return self._state.balance or 0
-
-    # -- Tone controls --
 
     async def tone_on(self) -> None:
         """Enable tone controls."""
@@ -288,22 +263,16 @@ class McIntoshReceiver:
         await self._query_all()
         return self._state.treble or 0
 
-    # -- Input trim --
-
     async def set_input_trim(self, trim: int) -> None:
         """Set input trim (``MIN_INPUT_TRIM`` to ``MAX_INPUT_TRIM``)."""
         if not MIN_INPUT_TRIM <= trim <= MAX_INPUT_TRIM:
-            raise ValueError(
-                f"Input trim must be between {MIN_INPUT_TRIM} and {MAX_INPUT_TRIM}"
-            )
+            raise ValueError(f"Input trim must be between {MIN_INPUT_TRIM} and {MAX_INPUT_TRIM}")
         await self._send_command("TIN", str(trim))
 
     async def query_input_trim(self) -> int:
         """Query and return the current input trim."""
         await self._query_all()
         return self._state.input_trim or 0
-
-    # -- Tone mode --
 
     async def set_tone_mode(self, mode: ToneMode) -> None:
         """Set tone mode (stereo or mono)."""
@@ -314,8 +283,6 @@ class McIntoshReceiver:
         await self._query_all()
         return self._state.tone_mode or ToneMode(0)
 
-    # -- Meter lights --
-
     async def meter_lights_on(self) -> None:
         """Turn the VU meter lights on."""
         await self._send_command("TML", "1")
@@ -323,8 +290,6 @@ class McIntoshReceiver:
     async def meter_lights_off(self) -> None:
         """Turn the VU meter lights off."""
         await self._send_command("TML", "0")
-
-    # -- Display brightness --
 
     async def set_display_brightness(self, level: int) -> None:
         """Set display brightness (``MIN_DISPLAY_BRIGHTNESS`` to
@@ -335,8 +300,6 @@ class McIntoshReceiver:
                 f"{MIN_DISPLAY_BRIGHTNESS} and {MAX_DISPLAY_BRIGHTNESS}"
             )
         await self._send_command("TDB", str(level))
-
-    # -- Full state query --
 
     async def query_state(self) -> None:
         """Query all current state from the amplifier.
@@ -356,8 +319,6 @@ class McIntoshReceiver:
 
         if self._batch_changed:
             self._notify_subscribers()
-
-    # -- Internal helpers --
 
     async def _query_all(self) -> None:
         """Send ``(QRY)`` and wait for the amplifier's full state response.
@@ -483,8 +444,7 @@ class McIntoshReceiver:
                 # This handles the power-off case where the amp responds to (QRY)
                 # without a trailing null terminator.
                 if buf:
-                    text = buf.lstrip(TERMCHAR).decode("ascii", 
-                                                       errors="replace").strip()
+                    text = buf.lstrip(TERMCHAR).decode("ascii", errors="replace").strip()
                     if text:
                         self._process_packet(text)
                     buf = b""
