@@ -1,0 +1,76 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Python Debugger: Current File",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${file}",
+            "console": "integratedTerminal"
+        },
+        {
+            "name": "McIntosh-RS232 CLI",
+            "type": "debugpy",
+            "request": "launch",
+            "module": "mcintosh_rs232",
+            "args": [
+                "--port",
+                "esphome://192.168.4.160:6053/?port_name=mcintosh_proxy"
+            ],
+            "cwd": "${workspaceFolder}/src",
+            "console": "integratedTerminal",
+            "justMyCode": true
+        },
+        {
+            "name": "McIntosh-RS232 CLI Prompt Arguments",
+            "type": "debugpy",
+            "request": "launch",
+            "module": "mcintosh_rs232",
+            "args": [
+                "--port",
+                "esphome://192.168.4.160:6053/?port_name=mcintosh_proxy",
+                "${command:pickArgs}"
+            ],
+            "cwd": "${workspaceFolder}/src",
+            "console": "integratedTerminal",
+            "justMyCode": true
+        },
+        {
+            "name": "McIntosh-RS232 CLI Choose",
+            "type": "debugpy",
+            "request": "launch",
+            "module": "mcintosh_rs232",
+            "args": [
+                "--port",
+                "esphome://192.168.4.160:6053/?port_name=mcintosh_proxy",
+                "${input:cmdChoice}"
+            ],
+            "cwd": "${workspaceFolder}/src",
+            "console": "integratedTerminal",
+            "justMyCode": true
+        }
+    ],
+    "inputs": [
+        {
+            "id": "cmdChoice",
+            "type": "pickString",
+            "description": "Select the command to run:",
+            // use --arg=value to avoid parsing issues
+            "options": [
+                "--power=on",
+                "--power=off",
+                "--volume=up",
+                "--volume=down",
+                "--input=USB",
+                "--input=HDMI",
+                "--bass=4",
+                "--meter-lights=on",
+                "--meter-lights=off"
+            ],
+            "default": "--power=on"
+        }
+    ]
+}

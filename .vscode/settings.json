@@ -1,0 +1,32 @@
+{
+    "chat.sessionSync.enabled": true,
+    
+    "python-envs.pythonProjects": [
+        {
+            "path": ".",
+            "envManager": "ms-python.python:venv",
+            "packageManager": "ms-python.python:pip"
+        }
+    ],
+    "python.analysis.diagnosticMode": "openFilesOnly",
+
+    // stop Pylance from indexing these folders entirely
+    "python.analysis.exclude": [
+        "**/.*",
+        "**/node_modules",
+        "**/__pycache__",
+        ".git",
+        "**/build",
+        "env/**",
+        "**/.venv/**",
+        "**/mac2mqtt/**",
+        "**/reference_material/**"
+    ],
+
+    "[python]": {
+        "editor.codeActionsOnSave": {
+            "source.organizeImports.ruff": "explicit",
+            "source.fixAll.ruff": "explicit"
+        }
+    }
+}
