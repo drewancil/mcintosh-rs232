@@ -73,34 +73,34 @@ def _fmt_enum(val: object | None) -> str:
 
 def _print_state(state: AmplifierState) -> None:
     print()
-    print("=== McIntosh Amplifier Status ===")
+    print("===== McIntosh Component Status =====")
     print()
     print(f"  Power:               {_fmt_bool(state.power)}")
     print(f"  Volume:              {_fmt_int(state.volume)}")
     print(f"  Mute:                {_fmt_bool(state.mute)}")
-    print(f"  Input source:        {_fmt_enum(state.input_source)}")
+    print(f"  Input Source:        {_fmt_enum(state.input_source)}")
     print(f"  Balance:             {_fmt_int(state.balance)}")
     print()
-    print(f"  Tone enabled:        {_fmt_bool(state.tone_enabled)}")
-    print(f"  Bass:                {_fmt_int(state.bass)}")
-    print(f"  Treble:              {_fmt_int(state.treble)}")
-    print(f"  Tone mode:           {_fmt_enum(state.tone_mode)}")
-    print(f"  Input trim:          {_fmt_int(state.input_trim)}")
+    print(f"  Tone Controls:       {_fmt_bool(state.tone_enabled)}")
+    print(f"    Bass:              {_fmt_int(state.bass)}")
+    print(f"    Treble:            {_fmt_int(state.treble)}")
+    print(f"    Input Trim:        {_fmt_int(state.input_trim)}")
+    print(f"    Tone Mode:         {_fmt_enum(state.tone_mode)}")
     print()
-    print(f"  Meter lights:        {_fmt_bool(state.meter_lights)}")
-    print(f"  Display brightness:  {_fmt_int(state.display_brightness)}")
+    print(f"  Meter Lights:        {_fmt_bool(state.meter_lights)}")
+    print(f"  Display Brightness:  {_fmt_int(state.display_brightness)}")
 
     if state.serial_number or state.firmware_version or state.da_version or state.model:
         print()
-        print("  Device info:")
+        print("  Device Info:")
         if state.model:
             print(f"    Model:             {state.model}")
         if state.serial_number:
-            print(f"    Serial number:     {state.serial_number}")
+            print(f"    Serial Number:     {state.serial_number}")
         if state.firmware_version:
             print(f"    Firmware:          {state.firmware_version}")
         if state.da_version:
-            print(f"    DA version:        {state.da_version}")
+            print(f"    DA Version:        {state.da_version}")
     print()
 
 
