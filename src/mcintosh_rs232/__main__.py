@@ -46,7 +46,6 @@ from .const import (
     MIN_INPUT_TRIM,
     MIN_TREBLE,
     MIN_VOLUME,
-    VERSION,
     InputSource,
     ToneMode,
 )
@@ -104,7 +103,7 @@ def _print_state(state: AmplifierState) -> None:
             print(f"    DA Version:        {state.da_version}")
     print()
     print()
-    print(f"======= McIntosh-MQTT v{VERSION} =======")
+    print(f"======= McIntosh-MQTT v{state.version} =======")
 
 
 def _on_off(value: str) -> bool:

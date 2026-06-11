@@ -4,13 +4,14 @@ from __future__ import annotations
 
 from dataclasses import dataclass, replace
 
-from .const import InputSource, ToneMode
+from .const import VERSION, InputSource, ToneMode
 
 
 @dataclass
 class AmplifierState:
     """Current state of the McIntosh amplifier."""
 
+    version: str = VERSION
     power: bool | None = None
     volume: int | None = None
     mute: bool | None = None
