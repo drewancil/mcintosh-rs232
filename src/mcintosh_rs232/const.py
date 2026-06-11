@@ -2,6 +2,8 @@
 
 from enum import Enum
 
+VERSION = "0.1.0"
+
 BAUD_RATE = 115200
 COMMAND_TIMEOUT = 2.0  # seconds to wait for a query response
 POWER_ON_TIMEOUT = 10.0  # seconds to wait for amp to finish booting
@@ -9,25 +11,20 @@ POWER_ON_SELFTEST_DELAY = 5.0  # seconds to wait for amp self-test after power-o
 QUERY_STATE_DELAY = 0.3  # seconds to wait for QRY responses to arrive
 TERMCHAR = b"\x00"
 
-# Volume range
 MIN_VOLUME = 0
 MAX_VOLUME = 100
 
-# Balance range
 MIN_BALANCE = -50
 MAX_BALANCE = 50
 
-# Bass/Treble range
 MIN_BASS = -6
 MAX_BASS = 6
 MIN_TREBLE = -6
 MAX_TREBLE = 6
 
-# Input trim range
 MIN_INPUT_TRIM = -12
 MAX_INPUT_TRIM = 12
 
-# Display brightness range
 MIN_DISPLAY_BRIGHTNESS = 1
 MAX_DISPLAY_BRIGHTNESS = 4
 

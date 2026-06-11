@@ -26,6 +26,7 @@ from .const import (
     MIN_VOLUME,
     POWER_ON_SELFTEST_DELAY,
     POWER_ON_TIMEOUT,
+    QUERY_STATE_DELAY,
     TERMCHAR,
     InputSource,
     ToneMode,
@@ -34,6 +35,10 @@ from .protocol import PendingQuery, parse_response_packet
 from .state import AmplifierState
 
 _LOGGER = logging.getLogger(__name__)
+
+# Some serial proxies can pause mid-packet for >200ms. Keep partial packets
+# buffered across short read timeouts and only flush after a longer idle window.
+_PARTIAL_PACKET_IDLE_FLUSH = 1.0
 
 # Explicitly listed so test code can override them at module level.
 __all__ = [
@@ -312,6 +317,10 @@ class McIntoshReceiver:
         self._batch_changed = False
         try:
             await self._query_all()
+            # Some devices stream QRY fields across multiple trailing packets.
+            # Give the read loop a short window to process those packets so the
+            # caller sees a complete state snapshot (including device metadata).
+            await asyncio.sleep(QUERY_STATE_DELAY)
         except TimeoutError:
             _LOGGER.debug("No response to QRY")
         finally:
@@ -435,19 +444,24 @@ class McIntoshReceiver:
         """Continuously read and process packets from the amplifier."""
         assert self._reader is not None
         buf = b""
+        partial_idle_since: float | None = None
+        loop = asyncio.get_running_loop()
 
         while self._connected:
             try:
                 data = await asyncio.wait_for(self._reader.read(256), timeout=0.2)
             except TimeoutError:
-                # No data for 200ms — flush any unterminated packet in the buffer.
-                # This handles the power-off case where the amp responds to (QRY)
-                # without a trailing null terminator.
+                # Keep buffering across short gaps; some transports split a
+                # single packet over several reads with large pauses.
                 if buf:
-                    text = buf.lstrip(TERMCHAR).decode("ascii", errors="replace").strip()
-                    if text:
-                        self._process_packet(text)
-                    buf = b""
+                    if partial_idle_since is None:
+                        partial_idle_since = loop.time()
+                    elif loop.time() - partial_idle_since >= _PARTIAL_PACKET_IDLE_FLUSH:
+                        text = buf.lstrip(TERMCHAR).decode("ascii", errors="replace").strip()
+                        buf = b""
+                        partial_idle_since = None
+                        if text:
+                            self._process_packet(text)
                 continue
             except Exception:
                 if not self._connected:
@@ -457,10 +471,16 @@ class McIntoshReceiver:
                 return
 
             if not data:
+                if buf:
+                    text = buf.lstrip(TERMCHAR).decode("ascii", errors="replace").strip()
+                    buf = b""
+                    if text:
+                        self._process_packet(text)
                 _LOGGER.warning("Serial connection closed")
                 await self._teardown()
                 return
 
+            partial_idle_since = None
             buf += data
 
             while TERMCHAR in buf:
