@@ -48,6 +48,7 @@ from .const import (
     MIN_VOLUME,
     InputSource,
     ToneMode,
+    format_ascii_bar,
 )
 
 
@@ -73,7 +74,9 @@ def _fmt_enum(val: object | None) -> str:
 
 def _print_state(state: AmplifierState) -> None:
     print()
-    print("===== McIntosh Component Status =====")
+    print(f"=========== McIntosh-MQTT v{state.version} ============")
+    print()
+    print("          McIntosh Component Status")
     print()
     print(f"  Power:               {_fmt_bool(state.power)}")
     print(f"  Volume:              {_fmt_int(state.volume)}")
@@ -81,14 +84,30 @@ def _print_state(state: AmplifierState) -> None:
     print(f"  Input Source:        {_fmt_enum(state.input_source)}")
     print(f"  Balance:             {_fmt_int(state.balance)}")
     print()
+    print(f"  Tone Mode:           {_fmt_enum(state.tone_mode)}")
     print(f"  Tone Controls:       {_fmt_bool(state.tone_enabled)}")
-    print(f"    Bass:              {_fmt_int(state.bass)}")
-    print(f"    Treble:            {_fmt_int(state.treble)}")
-    print(f"    Input Trim:        {_fmt_int(state.input_trim)}")
-    print(f"    Tone Mode:         {_fmt_enum(state.tone_mode)}")
+    print()
+    f_bass: int = int(state.bass * 2) if state.bass is not None else 0
+    f_treb: int = int(state.treble * 2) if state.treble is not None else 0
+    f_input_trim: int = int(state.input_trim) if state.input_trim is not None else 0
+    print(f"  Bass:         {format_ascii_bar(range(-12, 12), f_bass)} {_fmt_int(state.bass)}")
+    print(f"  Treble:       {format_ascii_bar(range(-12, 12), f_treb)} {_fmt_int(state.treble)}")
+    print(
+        f"  Input Trim:   {format_ascii_bar(range(MIN_INPUT_TRIM, MAX_INPUT_TRIM), f_input_trim)} "
+        f"{_fmt_int(f_input_trim)}"
+    )
     print()
     print(f"  Meter Lights:        {_fmt_bool(state.meter_lights)}")
-    print(f"  Display Brightness:  {_fmt_int(state.display_brightness)}")
+    print()
+    f_bright: int = int(state.display_brightness * 2) if state.display_brightness is not None else 0
+    print(
+        f"  Display Brightness:  {
+            format_ascii_bar(
+                range(MIN_DISPLAY_BRIGHTNESS * 2, MAX_DISPLAY_BRIGHTNESS * 2), f_bright, marker='|'
+            )
+        } "
+        f"{_fmt_int(state.display_brightness)}"
+    )
 
     if state.serial_number or state.firmware_version or state.da_version or state.model:
         print()
@@ -102,8 +121,6 @@ def _print_state(state: AmplifierState) -> None:
         if state.da_version:
             print(f"    DA Version:        {state.da_version}")
     print()
-    print()
-    print(f"======= McIntosh-MQTT v{state.version} =======")
 
 
 def _on_off(value: str) -> bool:

@@ -17,6 +17,7 @@ from mcintosh_rs232 import (
     McIntoshReceiver,
     ToneMode,
     _parse_response_packet,
+    format_ascii_bar,
 )
 
 # ---------------------------------------------------------------------------
@@ -109,6 +110,19 @@ def test_parse_unknown_tokens_ignored() -> None:
     # MA5300 identifier token has no space-separated value; should be skipped
     result = _parse_response_packet("(MA5300)")
     assert result == {}
+
+
+def test_format_ascii_bar_center_position() -> None:
+    assert format_ascii_bar(range(-6, 7), 2) == "[--------||----]"
+
+
+def test_format_ascii_bar_clamps_to_bounds() -> None:
+    assert format_ascii_bar(range(-6, 7), -99) == "[||------------]"
+    assert format_ascii_bar(range(-6, 7), 99) == "[------------||]"
+
+
+def test_format_ascii_bar_descending_range() -> None:
+    assert format_ascii_bar(range(6, -7, -1), 2) == "[--------||----]"
 
 
 # ---------------------------------------------------------------------------

@@ -2,7 +2,7 @@
 
 from enum import Enum
 
-VERSION = "0.1.1"
+VERSION = "0.1.2"
 
 BAUD_RATE = 115200
 COMMAND_TIMEOUT = 2.0  # seconds to wait for a query response
@@ -27,6 +27,34 @@ MAX_INPUT_TRIM = 12
 
 MIN_DISPLAY_BRIGHTNESS = 1
 MAX_DISPLAY_BRIGHTNESS = 4
+
+
+def format_ascii_bar(value_range: range, value: int, marker: str = "||", fill: str = "-") -> str:
+    """Render an inclusive integer range as a simple ASCII bar.
+
+    The marker is placed at the position corresponding to ``value`` within the
+    inclusive bounds of ``value_range``. Values outside the range are clamped.
+    """
+    if value_range.step not in (1, -1):
+        raise ValueError("value_range must use a step of 1 or -1")
+    if len(marker) == 0:
+        raise ValueError("marker must not be empty")
+    if len(fill) != 1:
+        raise ValueError("fill must be a single character")
+
+    start = value_range.start
+    stop = value_range.stop - 1 if value_range.step > 0 else value_range.stop + 1
+    low = min(start, stop)
+    high = max(start, stop)
+
+    clamped = max(low, min(high, value))
+    width = high - low + 1
+    position = clamped - low
+
+    left = fill * position
+    right = fill * (width - position - 1)
+    return f"[{left}{marker}{right}]"
+
 
 # Parameters that can be individually queried by sending ``(KEY)`` with no value.
 # PWR is queried separately during connect() and query_power().

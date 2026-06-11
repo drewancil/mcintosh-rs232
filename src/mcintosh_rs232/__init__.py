@@ -20,6 +20,7 @@ from .const import (
     TERMCHAR,
     InputSource,
     ToneMode,
+    format_ascii_bar,
 )
 from .protocol import parse_response_packet as _parse_response_packet
 from .receiver import McIntoshReceiver, StateCallback
@@ -37,6 +38,7 @@ __all__ = [
     "MAX_TREBLE",
     "MAX_VOLUME",
     "McIntoshReceiver",
+    "format_ascii_bar",
     "MIN_BALANCE",
     "MIN_BASS",
     "MIN_DISPLAY_BRIGHTNESS",
