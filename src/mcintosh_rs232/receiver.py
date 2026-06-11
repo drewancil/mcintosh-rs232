@@ -549,6 +549,7 @@ class McIntoshReceiver:
 
     def _notify_subscribers(self) -> None:
         """Notify all subscribers of a state change or disconnect."""
+        _LOGGER.debug("Firing callback to notify subscribers of state change: %s", self._state)
         state = self._state.copy() if self._connected else None
         for callback in self._subscribers:
             try:
