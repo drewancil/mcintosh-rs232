@@ -2,7 +2,7 @@
 
 from enum import Enum
 
-VERSION = "0.1.0"
+VERSION = "0.1.1"
 
 BAUD_RATE = 115200
 COMMAND_TIMEOUT = 2.0  # seconds to wait for a query response
