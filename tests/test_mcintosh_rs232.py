@@ -38,6 +38,16 @@ def test_parse_negative_value() -> None:
     assert result == {"TBA": "-30"}
 
 
+def test_parse_compact_token_without_space() -> None:
+    result = _parse_response_packet("(VOL75)")
+    assert result == {"VOL": "75"}
+
+
+def test_parse_compact_negative_token_without_space() -> None:
+    result = _parse_response_packet("(TIN-6)")
+    assert result == {"TIN": "-6"}
+
+
 def test_parse_all_negative_params() -> None:
     result = _parse_response_packet("(TTB -6)(TTT -3)(TIN -12)")
     assert result == {"TTB": "-6", "TTT": "-3", "TIN": "-12"}
@@ -72,6 +82,23 @@ def test_parse_power_on_dump() -> None:
     assert result["VOL"] == "43"
     assert result["INP"] == "11"
     assert result["TTB"] == "3"
+    assert result["MODEL"] == "MA5300"
+
+
+def test_parse_full_dump_with_null_prefix_suffix() -> None:
+    data = (
+        "\x00\x00(MA5300)(Serial Number: AFP2999)(FW Version: 2.08)"
+        "(DA Version: V5.11)(PWR 1)(VOL 25)(MUT 0)(INP 11)(STA 1)"
+        "(TBA 0)(TIN 0)(TTN 1)(TTB 4)(TTT 0)(TMO 0)(TML 0)(TDB 4)"
+        "(THH 1)(HPS 0)\x00\x00"
+    )
+    result = _parse_response_packet(data)
+
+    assert result["MODEL"] == "MA5300"
+    assert result["SER"] == "AFP2999"
+    assert result["FWV"] == "2.08"
+    assert result["DAV"] == "5.11"
+    assert result["TML"] == "0"
 
 
 def test_parse_empty_packet() -> None:
@@ -156,16 +183,12 @@ async def test_query_power_off(
     assert await receiver.query_power() is False
 
 
-async def test_query_volume(
-    receiver: McIntoshReceiver, mock_serial: MockSerialConnection
-) -> None:
+async def test_query_volume(receiver: McIntoshReceiver, mock_serial: MockSerialConnection) -> None:
     mock_serial._query_responses["VOL"] = ["(VOL 75)"]
     assert await receiver.query_volume() == 75
 
 
-async def test_query_mute_on(
-    receiver: McIntoshReceiver, mock_serial: MockSerialConnection
-) -> None:
+async def test_query_mute_on(receiver: McIntoshReceiver, mock_serial: MockSerialConnection) -> None:
     mock_serial._query_responses["MUT"] = ["(MUT 1)"]
     assert await receiver.query_mute() is True
 
@@ -177,37 +200,27 @@ async def test_query_mute_off(
     assert await receiver.query_mute() is False
 
 
-async def test_query_input(
-    receiver: McIntoshReceiver, mock_serial: MockSerialConnection
-) -> None:
+async def test_query_input(receiver: McIntoshReceiver, mock_serial: MockSerialConnection) -> None:
     mock_serial._query_responses["INP"] = ["(INP 6)"]
     assert await receiver.query_input() == InputSource.PHONO
 
 
-async def test_query_balance(
-    receiver: McIntoshReceiver, mock_serial: MockSerialConnection
-) -> None:
+async def test_query_balance(receiver: McIntoshReceiver, mock_serial: MockSerialConnection) -> None:
     mock_serial._query_responses["TBA"] = ["(TBA -20)"]
     assert await receiver.query_balance() == -20
 
 
-async def test_query_tone(
-    receiver: McIntoshReceiver, mock_serial: MockSerialConnection
-) -> None:
+async def test_query_tone(receiver: McIntoshReceiver, mock_serial: MockSerialConnection) -> None:
     mock_serial._query_responses["TTN"] = ["(TTN 0)"]
     assert await receiver.query_tone() is False
 
 
-async def test_query_bass(
-    receiver: McIntoshReceiver, mock_serial: MockSerialConnection
-) -> None:
+async def test_query_bass(receiver: McIntoshReceiver, mock_serial: MockSerialConnection) -> None:
     mock_serial._query_responses["TTB"] = ["(TTB -3)"]
     assert await receiver.query_bass() == -3
 
 
-async def test_query_treble(
-    receiver: McIntoshReceiver, mock_serial: MockSerialConnection
-) -> None:
+async def test_query_treble(receiver: McIntoshReceiver, mock_serial: MockSerialConnection) -> None:
     mock_serial._query_responses["TTT"] = ["(TTT 4)"]
     assert await receiver.query_treble() == 4
 
@@ -231,23 +244,17 @@ async def test_query_tone_mode(
 # ---------------------------------------------------------------------------
 
 
-async def test_power_on(
-    receiver: McIntoshReceiver, mock_serial: MockSerialConnection
-) -> None:
+async def test_power_on(receiver: McIntoshReceiver, mock_serial: MockSerialConnection) -> None:
     await receiver.power_on()
     assert b"(PWR 1)" in mock_serial.written_data
 
 
-async def test_power_off(
-    receiver: McIntoshReceiver, mock_serial: MockSerialConnection
-) -> None:
+async def test_power_off(receiver: McIntoshReceiver, mock_serial: MockSerialConnection) -> None:
     await receiver.power_off()
     assert b"(PWR 0)" in mock_serial.written_data
 
 
-async def test_set_volume(
-    receiver: McIntoshReceiver, mock_serial: MockSerialConnection
-) -> None:
+async def test_set_volume(receiver: McIntoshReceiver, mock_serial: MockSerialConnection) -> None:
     await receiver.set_volume(42)
     assert b"(VOL 42)" in mock_serial.written_data
 
@@ -287,17 +294,13 @@ async def test_set_volume_respects_max_volume_limit() -> None:
     await recv.disconnect()
 
 
-async def test_volume_up(
-    receiver: McIntoshReceiver, mock_serial: MockSerialConnection
-) -> None:
+async def test_volume_up(receiver: McIntoshReceiver, mock_serial: MockSerialConnection) -> None:
     # state.volume starts at 50 from DEFAULT_QUERY_RESPONSES
     await receiver.volume_up()
     assert b"(VOL 51)" in mock_serial.written_data
 
 
-async def test_volume_down(
-    receiver: McIntoshReceiver, mock_serial: MockSerialConnection
-) -> None:
+async def test_volume_down(receiver: McIntoshReceiver, mock_serial: MockSerialConnection) -> None:
     await receiver.volume_down()
     assert b"(VOL 49)" in mock_serial.written_data
 
@@ -320,23 +323,17 @@ async def test_volume_down_at_zero_clamps(
     assert b"(VOL 0)" in mock_serial.written_data
 
 
-async def test_mute_on(
-    receiver: McIntoshReceiver, mock_serial: MockSerialConnection
-) -> None:
+async def test_mute_on(receiver: McIntoshReceiver, mock_serial: MockSerialConnection) -> None:
     await receiver.mute_on()
     assert b"(MUT 1)" in mock_serial.written_data
 
 
-async def test_mute_off(
-    receiver: McIntoshReceiver, mock_serial: MockSerialConnection
-) -> None:
+async def test_mute_off(receiver: McIntoshReceiver, mock_serial: MockSerialConnection) -> None:
     await receiver.mute_off()
     assert b"(MUT 0)" in mock_serial.written_data
 
 
-async def test_select_input(
-    receiver: McIntoshReceiver, mock_serial: MockSerialConnection
-) -> None:
+async def test_select_input(receiver: McIntoshReceiver, mock_serial: MockSerialConnection) -> None:
     await receiver.select_input(InputSource.PHONO)
     assert b"(INP 6)" in mock_serial.written_data
 
@@ -348,9 +345,7 @@ async def test_select_input_hdmi(
     assert b"(INP 13)" in mock_serial.written_data
 
 
-async def test_set_balance(
-    receiver: McIntoshReceiver, mock_serial: MockSerialConnection
-) -> None:
+async def test_set_balance(receiver: McIntoshReceiver, mock_serial: MockSerialConnection) -> None:
     await receiver.set_balance(-10)
     assert b"(TBA -10)" in mock_serial.written_data
 
@@ -372,23 +367,17 @@ async def test_set_balance_below_min_raises(receiver: McIntoshReceiver) -> None:
         await receiver.set_balance(-51)
 
 
-async def test_tone_on(
-    receiver: McIntoshReceiver, mock_serial: MockSerialConnection
-) -> None:
+async def test_tone_on(receiver: McIntoshReceiver, mock_serial: MockSerialConnection) -> None:
     await receiver.tone_on()
     assert b"(TTN 1)" in mock_serial.written_data
 
 
-async def test_tone_off(
-    receiver: McIntoshReceiver, mock_serial: MockSerialConnection
-) -> None:
+async def test_tone_off(receiver: McIntoshReceiver, mock_serial: MockSerialConnection) -> None:
     await receiver.tone_off()
     assert b"(TTN 0)" in mock_serial.written_data
 
 
-async def test_set_bass(
-    receiver: McIntoshReceiver, mock_serial: MockSerialConnection
-) -> None:
+async def test_set_bass(receiver: McIntoshReceiver, mock_serial: MockSerialConnection) -> None:
     await receiver.set_bass(3)
     assert b"(TTB 3)" in mock_serial.written_data
 
@@ -410,9 +399,7 @@ async def test_set_bass_below_min_raises(receiver: McIntoshReceiver) -> None:
         await receiver.set_bass(-7)
 
 
-async def test_set_treble(
-    receiver: McIntoshReceiver, mock_serial: MockSerialConnection
-) -> None:
+async def test_set_treble(receiver: McIntoshReceiver, mock_serial: MockSerialConnection) -> None:
     await receiver.set_treble(2)
     assert b"(TTT 2)" in mock_serial.written_data
 
@@ -493,9 +480,7 @@ async def test_set_display_brightness_below_min_raises(
 # ---------------------------------------------------------------------------
 
 
-async def test_event_volume(
-    receiver: McIntoshReceiver, mock_serial: MockSerialConnection
-) -> None:
+async def test_event_volume(receiver: McIntoshReceiver, mock_serial: MockSerialConnection) -> None:
     states: list[AmplifierState | None] = []
     receiver.subscribe(states.append)
 
@@ -508,17 +493,28 @@ async def test_event_volume(
     assert states[0].volume == 75
 
 
-async def test_event_mute(
+async def test_event_volume_compact_token_fires_callback(
     receiver: McIntoshReceiver, mock_serial: MockSerialConnection
 ) -> None:
+    states: list[AmplifierState | None] = []
+    receiver.subscribe(states.append)
+
+    mock_serial.inject_response("(VOL76)")
+    await asyncio.sleep(0.05)
+
+    assert receiver.state.volume == 76
+    assert len(states) == 1
+    assert states[0] is not None
+    assert states[0].volume == 76
+
+
+async def test_event_mute(receiver: McIntoshReceiver, mock_serial: MockSerialConnection) -> None:
     mock_serial.inject_response("(MUT 1)")
     await asyncio.sleep(0.05)
     assert receiver.state.mute is True
 
 
-async def test_event_input(
-    receiver: McIntoshReceiver, mock_serial: MockSerialConnection
-) -> None:
+async def test_event_input(receiver: McIntoshReceiver, mock_serial: MockSerialConnection) -> None:
     mock_serial.inject_response("(INP 6)")
     await asyncio.sleep(0.05)
     assert receiver.state.input_source == InputSource.PHONO
@@ -660,9 +656,7 @@ async def test_connect_sends_sta_enable() -> None:
     mock = MockSerialConnection()
     mock._query_responses = dict(DEFAULT_QUERY_RESPONSES)
 
-    async def fake_open(
-        *args: object, **kwargs: object
-    ) -> tuple[asyncio.StreamReader, object]:
+    async def fake_open(*args: object, **kwargs: object) -> tuple[asyncio.StreamReader, object]:
         return mock.reader, mock.writer
 
     with patch(
@@ -681,9 +675,7 @@ async def test_connect_no_response_raises() -> None:
     mock = MockSerialConnection()
     # No responses configured → query_power() will time out.
 
-    async def fake_open(
-        *args: object, **kwargs: object
-    ) -> tuple[asyncio.StreamReader, object]:
+    async def fake_open(*args: object, **kwargs: object) -> tuple[asyncio.StreamReader, object]:
         return mock.reader, mock.writer
 
     with patch(

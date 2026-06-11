@@ -36,7 +36,7 @@ DEFAULT_QUERY_RESPONSES: dict[str, list[str]] = {
 class MockSerialConnection:
     """Mock the serialx reader/writer pair with auto-response support.
 
-    Responses are injected as complete ``}``-terminated packets so that the
+    Responses are injected as complete term-char terminated packets so that the
     receiver's ``_read_loop`` can process them exactly as it would real data.
     """
 
@@ -76,8 +76,8 @@ class MockSerialConnection:
             self._command_handler(text)
 
     def inject_response(self, packet_content: str) -> None:
-        """Simulate the amplifier sending a ``}``-terminated response packet."""
-        self.reader.feed_data((packet_content + "}").encode("ascii"))
+        """Simulate the amplifier sending a term-char terminated response packet."""
+        self.reader.feed_data(packet_content.encode("ascii") + mcintosh_rs232.TERMCHAR)
 
 
 @pytest.fixture
@@ -91,9 +91,7 @@ async def receiver(mock_serial: MockSerialConnection) -> McIntoshReceiver:  # ty
     recv = McIntoshReceiver("/dev/ttyUSB0")
     mock_serial._query_responses = dict(DEFAULT_QUERY_RESPONSES)
 
-    async def fake_open(
-        *args: object, **kwargs: object
-    ) -> tuple[asyncio.StreamReader, MagicMock]:
+    async def fake_open(*args: object, **kwargs: object) -> tuple[asyncio.StreamReader, MagicMock]:
         return mock_serial.reader, mock_serial.writer
 
     with patch(
@@ -117,9 +115,7 @@ async def connect_with_defaults(mock: MockSerialConnection) -> McIntoshReceiver:
     mock._query_responses = dict(DEFAULT_QUERY_RESPONSES)
     recv = McIntoshReceiver("/dev/ttyUSB0")
 
-    async def fake_open(
-        *args: object, **kwargs: object
-    ) -> tuple[asyncio.StreamReader, MagicMock]:
+    async def fake_open(*args: object, **kwargs: object) -> tuple[asyncio.StreamReader, MagicMock]:
         return mock.reader, mock.writer
 
     with patch(
