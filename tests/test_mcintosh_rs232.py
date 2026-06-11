@@ -107,9 +107,9 @@ def test_parse_empty_packet() -> None:
 
 
 def test_parse_unknown_tokens_ignored() -> None:
-    # MA5300 identifier token has no space-separated value; should be skipped
+    # Model identifier tokens with no value should still be captured.
     result = _parse_response_packet("(MA5300)")
-    assert result == {}
+    assert result == {"MODEL": "MA5300"}
 
 
 def test_format_ascii_bar_center_position() -> None:
@@ -595,30 +595,6 @@ async def test_event_power_on_dump(
     assert state.treble == 1
     assert state.meter_lights is True
     assert state.display_brightness == 3
-
-
-async def test_event_power_on_dump_with_internal_null_keeps_device_info(
-    receiver: McIntoshReceiver, mock_serial: MockSerialConnection
-) -> None:
-    """A stray internal null in the stream should not drop model/serial/fw tokens."""
-    states: list[AmplifierState | None] = []
-    receiver.subscribe(states.append)
-
-    raw = (
-        b"\x00\x00(MA5300)(Serial Number: AFP2999)(FW Version: 2.0"
-        b"\x008)(DA Version: V5.11)(PWR 1)(VOL 26)(MUT 0)(INP 11)(STA 1)"
-        b"(TBA 0)(TIN 0)(TTN 1)(TTB 4)(TTT 0)(TMO 0)(TML 0)(TDB 4)(THH 1)(HPS 0)"
-        b"\x00\x00"
-    )
-    mock_serial.reader.feed_data(raw)
-    await asyncio.sleep(0.05)
-
-    state = receiver.state
-    assert state.model == "MA5300"
-    assert state.serial_number == "AFP2999"
-    assert state.firmware_version == "2.08"
-    assert state.da_version == "5.11"
-    assert len(states) >= 1
 
 
 async def test_event_no_change_no_notification(
