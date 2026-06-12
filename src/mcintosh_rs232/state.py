@@ -11,7 +11,8 @@ from .const import VERSION, InputSource, ToneMode
 class AmplifierState:
     """Current state of the McIntosh amplifier."""
 
-    version: str = VERSION
+    version: str = VERSION  # version of the mcintosh_rs232 library
+    manufacturer: str = "McIntosh"
     power: bool | None = None
     volume: int | None = None
     mute: bool | None = None
@@ -27,6 +28,7 @@ class AmplifierState:
     firmware_version: str | None = None
     serial_number: str | None = None
     da_version: str | None = None
+
     model: str | None = None
 
     def copy(self) -> AmplifierState:

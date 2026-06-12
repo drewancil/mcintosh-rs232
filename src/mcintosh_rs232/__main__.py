@@ -111,10 +111,11 @@ def _print_state(state: AmplifierState) -> None:
 
     if state.serial_number or state.firmware_version or state.da_version or state.model:
         print()
-        print()
-        print("  Device Info:")
+        print("--------- Device Info ---------")
+
         if state.model:
             print(f"  Model:             {state.model}")
+        print(f"  Manufacturer:      {state.manufacturer}")
         if state.serial_number:
             print(f"  Serial Number:     {state.serial_number}")
         if state.firmware_version:
