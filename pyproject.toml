@@ -1,6 +1,6 @@
 [project]
 name = "mcintosh-rs232"
-version = "0.1.0"
+version = "0.1.3"
 description = "Async library to control McIntosh amplifiers over RS232"
 readme = "README.md"
 license = "MIT"
