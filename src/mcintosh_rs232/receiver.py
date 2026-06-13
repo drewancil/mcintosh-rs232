@@ -123,10 +123,6 @@ class McIntoshReceiver:
             connect_kwargs["key"] = "bhMn8ROVmBv46hf6PxoR1zcRXsNW59McTrOzsYpXluI="
             connect_kwargs["url"] = "esphome://192.168.4.160:6053/?port_name=mcintosh_proxy"
 
-        # self._reader, self._writer = await serialx.open_serial_connection(
-        #    self._port,
-        #    **connect_kwargs,
-        # )
         self._reader, self._writer = await serialx.open_serial_connection(
             **connect_kwargs,
         )
@@ -212,7 +208,11 @@ class McIntoshReceiver:
     async def query_input(self) -> InputSource:
         """Query and return the current input source."""
         await self._query_all()
-        return self._state.input_source or InputSource(1)
+        return (
+            InputSource[self._state.input_source.name]
+            if self._state.input_source
+            else InputSource(1)
+        )
 
     async def set_balance(self, balance: int) -> None:
         """Set balance (``MIN_BALANCE`` to ``MAX_BALANCE``).
