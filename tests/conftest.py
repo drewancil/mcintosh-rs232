@@ -76,7 +76,7 @@ class MockSerialConnection:
             self._command_handler(text)
 
     def inject_response(self, packet_content: str) -> None:
-        """Simulate the amplifier sending a term-char terminated response packet."""
+        """Simulate the receiver sending a term-char terminated response packet."""
         self.reader.feed_data(packet_content.encode("ascii") + mcintosh_rs232.TERMCHAR)
 
 

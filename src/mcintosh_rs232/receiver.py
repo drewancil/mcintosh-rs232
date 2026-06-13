@@ -1,4 +1,4 @@
-"""McIntosh amplifier controller for mcintosh_rs232."""
+"""McIntosh receiver controller for mcintosh_rs232."""
 
 from __future__ import annotations
 
@@ -46,7 +46,7 @@ StateCallback = Callable[[AmplifierState | None], None]
 
 
 class McIntoshReceiver:
-    """Async controller for a McIntosh amplifier over RS232.
+    """Async controller for a McIntosh receiver over RS232.
 
     Typical usage::
 
@@ -73,12 +73,12 @@ class McIntoshReceiver:
 
     @property
     def state(self) -> AmplifierState:
-        """Return a copy of the current amplifier state."""
+        """Return a copy of the current receiver state."""
         return self._state.copy()
 
     @property
     def connected(self) -> bool:
-        """Return ``True`` if currently connected to the amplifier."""
+        """Return ``True`` if currently connected to the receiver."""
         return self._connected
 
     @property
@@ -94,7 +94,7 @@ class McIntoshReceiver:
     def subscribe(self, callback: StateCallback) -> Callable[[], None]:
         """Subscribe to state changes.
 
-        The callback receives a copy of :class:`AmplifierState` on every
+        The callback receives a copy of :class:`receiverState` on every
         change, and ``None`` when the connection is lost.  Returns an
         unsubscribe callable.
         """
@@ -102,9 +102,9 @@ class McIntoshReceiver:
         return lambda: self._subscribers.remove(callback)
 
     async def connect(self) -> None:
-        """Open the serial connection and verify the amplifier is responding.
+        """Open the serial connection and verify the receiver is responding.
 
-        Raises :exc:`ConnectionError` if the amplifier does not respond within
+        Raises :exc:`ConnectionError` if the receiver does not respond within
         the command timeout.
         """
         # if sys.platform.startswith("linux"):
@@ -137,27 +137,27 @@ class McIntoshReceiver:
             await self._query_all()
         except TimeoutError:
             await self.disconnect()
-            raise ConnectionError(f"No response from amplifier on {self._port}") from None
+            raise ConnectionError(f"No response from receiver on {self._port}") from None
 
-        # Enable unsolicited status updates from the amplifier.
+        # Enable unsolicited status updates from the receiver.
         await self._send_command("STA", "1")
 
-        _LOGGER.info("Connected to McIntosh amplifier on %s", self._port)
+        _LOGGER.info("Connected to McIntosh receiver on %s", self._port)
 
     async def disconnect(self) -> None:
         """Close the serial connection and notify subscribers."""
         await self._teardown()
-        _LOGGER.info("Disconnected from McIntosh amplifier")
+        _LOGGER.info("Disconnected from McIntosh receiver")
 
     async def power_on(self) -> None:
-        """Turn the amplifier on and wait for it to finish booting."""
+        """Turn the receiver on and wait for it to finish booting."""
         await self._send_command_and_wait("PWR", "1", timeout=POWER_ON_TIMEOUT)
         # Amp runs a self-test after the boot echo; commands are queued but
         # not echoed back until it completes.
         await asyncio.sleep(POWER_ON_SELFTEST_DELAY)
 
     async def power_off(self) -> None:
-        """Turn the amplifier off."""
+        """Turn the receiver off."""
         await self._send_command("PWR", "0")
 
     async def query_power(self) -> bool:
@@ -175,7 +175,7 @@ class McIntoshReceiver:
         """Increment the volume by one step."""
         current = self._state.volume
         if current is None:
-            _LOGGER.warning("volume_up called but volume state is unknown")
+            _LOGGER.warning("No action: volume_up called but volume state is unknown")
             return
         await self.set_volume(min(current + 1, self._max_volume))
 
@@ -183,7 +183,7 @@ class McIntoshReceiver:
         """Decrement the volume by one step."""
         current = self._state.volume
         if current is None:
-            _LOGGER.warning("volume_down called but volume state is unknown")
+            _LOGGER.warning("No action: volume_down called but volume state is unknown")
             return
         await self.set_volume(max(current - 1, MIN_VOLUME))
 
@@ -193,11 +193,11 @@ class McIntoshReceiver:
         return self._state.volume or 0
 
     async def mute_on(self) -> None:
-        """Mute the amplifier."""
+        """Mute the receiver."""
         await self._send_command("MUT", "1")
 
     async def mute_off(self) -> None:
-        """Unmute the amplifier."""
+        """Unmute the receiver."""
         await self._send_command("MUT", "0")
 
     async def query_mute(self) -> bool:
@@ -302,7 +302,7 @@ class McIntoshReceiver:
         await self._send_command("TDB", str(level))
 
     async def query_state(self) -> None:
-        """Query all current state from the amplifier.
+        """Query all current state from the receiver.
 
         Sends ``(QRY)`` which returns the full state in a single response.
         Subscriber notifications are suppressed while the query runs and
@@ -321,7 +321,7 @@ class McIntoshReceiver:
             self._notify_subscribers()
 
     async def _query_all(self) -> None:
-        """Send ``(QRY)`` and wait for the amplifier's full state response.
+        """Send ``(QRY)`` and wait for the receiver's full state response.
 
         Registers a pending query on ``PWR`` (which is always present in the
         QRY response) so the caller can ``await`` the round-trip.
@@ -373,7 +373,7 @@ class McIntoshReceiver:
                 self._pending_queries.remove(pending)
 
     async def _send_command(self, key: str, value: str) -> None:
-        """Write a ``(KEY VALUE)`` command to the amplifier."""
+        """Write a ``(KEY VALUE)`` command to the receiver."""
         assert self._writer is not None
         msg = f"({key} {value})".encode("ascii")
         _LOGGER.debug("Sending: %s", msg)
@@ -432,7 +432,7 @@ class McIntoshReceiver:
         self._notify_subscribers()
 
     async def _read_loop(self) -> None:
-        """Continuously read and process packets from the amplifier."""
+        """Continuously read and process packets from the receiver."""
         assert self._reader is not None
         buf = b""
 
@@ -483,7 +483,7 @@ class McIntoshReceiver:
         return True
 
     def _set_state_value(self, attr: str, new_value: object) -> bool:
-        """Set an :class:`AmplifierState` attribute only when its value changes."""
+        """Set an :class:`receiverState` attribute only when its value changes."""
         return self._set_attr_value(self._state, attr, new_value)
 
     def _process_packet(self, packet: str) -> None:
@@ -549,7 +549,7 @@ class McIntoshReceiver:
             _LOGGER.warning("Could not parse token %s=%s", key, value)
             return False
 
-        _LOGGER.debug("Unknown token key: %s", key)
+        _LOGGER.debug("No action for token: %s", key)
         return False
 
     def _notify_subscribers(self) -> None:

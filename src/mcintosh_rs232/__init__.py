@@ -1,4 +1,4 @@
-"""Async library to control McIntosh amplifiers over RS232 using serialx."""
+"""Async library to control McIntosh receivers over RS232 using serialx."""
 
 from .const import (
     _QUERYABLE_PARAMS,

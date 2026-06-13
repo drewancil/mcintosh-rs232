@@ -1,8 +1,8 @@
 # mcintosh-rs232
 
-Async Python library to control McIntosh integrated amplifiers over RS232 serial, built on [serialx](https://github.com/puddly/serialx).
+Async Python library to control McIntosh integrated receivers over RS232 serial, built on [serialx](https://github.com/puddly/serialx).
 
-Developed and tested against the **McIntosh MA5300** Integrated Amplifier. The RS232 protocol is common across McIntosh's integrated amplifier line, so other models should work with little or no changes.
+Developed and tested against the **McIntosh MA5300** Integrated receiver. The RS232 protocol is common across McIntosh's integrated receiver line, so other models should work with little or no changes.
 
 ## Installation
 
@@ -28,7 +28,7 @@ async def main():
     print(f"Volume: {receiver.state.volume}")
     print(f"Input:  {receiver.state.input_source}")
 
-    # Control the amplifier
+    # Control the receiver
     await receiver.set_volume(45)
     await receiver.select_input(InputSource.USB)
 
@@ -42,7 +42,7 @@ asyncio.run(main())
 A built-in CLI lets you quickly test your serial connection:
 
 ```bash
-# Query and print amplifier state
+# Query and print receiver state
 python -m mcintosh_rs232 /dev/ttyS0
 
 # Set a maximum volume limit
@@ -75,7 +75,7 @@ python -m mcintosh_rs232 /dev/ttyS0 --volume 40 --input BALANCED --mute off
 
 ### Full state after query
 
-`connect()` opens the serial connection, enables unsolicited status updates from the amplifier (`STA 1`), and verifies the connection by querying power state. Call `query_state()` to populate all remaining state fields. After that, state is kept up to date automatically via push events from the amplifier.
+`connect()` opens the serial connection, enables unsolicited status updates from the receiver (`STA 1`), and verifies the connection by querying power state. Call `query_state()` to populate all remaining state fields. After that, state is kept up to date automatically via push events from the receiver.
 
 ```python
 receiver = McIntoshReceiver("/dev/ttyUSB0")
@@ -223,7 +223,7 @@ await receiver.set_display_brightness(3)
 
 ### Connection handling
 
-- If the amplifier does not respond during `connect()`, a `ConnectionError` is raised and the connection is closed cleanly.
+- If the receiver does not respond during `connect()`, a `ConnectionError` is raised and the connection is closed cleanly.
 - If the serial connection is lost (cable unplugged, device error), all subscribers receive `None` and `connected` becomes `False`.
 - Write errors during commands propagate the exception and tear down the connection.
 
@@ -231,7 +231,7 @@ await receiver.set_display_brightness(3)
 try:
     await receiver.connect()
 except ConnectionError:
-    print("Amplifier not responding")
+    print("receiver not responding")
 ```
 
 ## Input sources
@@ -258,7 +258,7 @@ The library uses [serialx](https://github.com/puddly/serialx) for async serial I
 
 The RS232 port on the MA5300 is a standard DB-9 connector.
 
-The McIntosh RS232 protocol wraps commands in parentheses: `(KEY VALUE)`. Responses are terminated with `}`. The amplifier sends a full state dump on power-on and whenever `(QRY)` is issued.
+The McIntosh RS232 protocol wraps commands in parentheses: `(KEY VALUE)`. Responses are terminated with `}`. The receiver sends a full state dump on power-on and whenever `(QRY)` is issued.
 
 ## Development
 

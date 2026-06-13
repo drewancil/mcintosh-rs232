@@ -490,7 +490,7 @@ async def test_set_display_brightness_below_min_raises(
 
 
 # ---------------------------------------------------------------------------
-# Unsolicited event tests (amplifier pushes state without being asked)
+# Unsolicited event tests (receiver pushes state without being asked)
 # ---------------------------------------------------------------------------
 
 
@@ -685,7 +685,7 @@ async def test_connect_sends_sta_enable() -> None:
 
 
 async def test_connect_no_response_raises() -> None:
-    """connect() must raise ConnectionError when the amplifier does not respond."""
+    """connect() must raise ConnectionError when the receiver does not respond."""
     mock = MockSerialConnection()
     # No responses configured → query_power() will time out.
 

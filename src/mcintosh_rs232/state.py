@@ -9,7 +9,7 @@ from .const import VERSION, InputSource, ToneMode
 
 @dataclass
 class AmplifierState:
-    """Current state of the McIntosh amplifier."""
+    """Current state of the McIntosh receiver."""
 
     version: str = VERSION  # version of the mcintosh_rs232 library
     manufacturer: str = "McIntosh"

@@ -80,7 +80,7 @@ def _print_state(state: AmplifierState) -> None:
     print(f"  Power:             {_fmt_bool(state.power)}")
     print(f"  Volume:            {_fmt_int(state.volume)}")
     print(f"  Mute:              {_fmt_bool(state.mute)}")
-    print(f"  Input Source:      {_fmt_enum(state.input_source)}")
+    print(f"  Input Source:      {state.input_source.name if state.input_source else '?'}")
     print(f"  Balance:           {_fmt_int(state.balance)}")
     print()
     print(f"  Tone Mode:         {_fmt_enum(state.tone_mode)}")
