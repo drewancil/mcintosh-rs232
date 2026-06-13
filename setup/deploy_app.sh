@@ -15,10 +15,16 @@ rsync -am \
     --exclude='.git/' \
     --exclude='.gitignore' \
     --exclude='.DS_Store' \
+    --exclude='.python-version' \
+    --exclude='*.md' \
+    --exclude='py.typed' \
+    --exclude='pyproject.toml' \
+    --exclude='LICENSE' \
     --exclude='*.log*' \
     --exclude='.pylintrc' \
     --exclude='backup/' \
     --exclude='images/' \
+    --exclude='tests/' \
     --exclude='*.jpg' \
     '/Users/andrew/Development/mcintosh-rs232/' \
     sagebrush@mac2mqtt.crampedcell.com:/home/sagebrush/mcintosh-rs232
