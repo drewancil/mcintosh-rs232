@@ -25,6 +25,8 @@ class AmplifierState:
     tone_mode: ToneMode | None = None
     meter_lights: bool | None = None
     display_brightness: int | None = None
+    headphones_plugged: bool | None = None
+    headphone_crossfeed: bool | None = None
     firmware_version: str | None = None
     serial_number: str | None = None
     da_version: str | None = None

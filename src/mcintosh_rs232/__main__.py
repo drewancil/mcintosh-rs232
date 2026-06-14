@@ -108,6 +108,9 @@ def _print_state(state: AmplifierState) -> None:
         f"{_fmt_int(state.display_brightness)}"
     )
     print(f"  VU Backlights:          {_fmt_bool(state.meter_lights)}")
+    print()
+    print(f"  Headphones Plugged:     {_fmt_bool(state.headphones_plugged)}")
+    print(f"  Headphone Crossfeed:    {_fmt_bool(state.headphone_crossfeed)}")
 
     if state.serial_number or state.firmware_version or state.da_version or state.model:
         print()
@@ -239,6 +242,15 @@ async def _main(args: argparse.Namespace) -> int:
             print(f"Setting display brightness to {args.display_brightness} ...")
             await receiver.set_display_brightness(args.display_brightness)
 
+        if args.headphone_crossfeed is not None:
+            any_command = True
+            if args.headphone_crossfeed:
+                print("Enabling headphone crossfeed ...")
+                await receiver.headphone_crossfeed_on()
+            else:
+                print("Disabling headphone crossfeed ...")
+                await receiver.headphone_crossfeed_off()
+
         if not any_command:
             print("Querying state ...")
         await receiver.query_state()
@@ -362,6 +374,13 @@ def main() -> None:
         type=int,
         metavar="N",
         help=f"Set display brightness ({MIN_DISPLAY_BRIGHTNESS}–{MAX_DISPLAY_BRIGHTNESS})",
+    )
+
+    parser.add_argument(
+        "--headphone-crossfeed",
+        type=_on_off,
+        metavar="on|off",
+        help="Enable or disable headphone crossfeed",
     )
 
     args = parser.parse_args()

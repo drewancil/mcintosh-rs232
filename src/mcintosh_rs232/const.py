@@ -70,6 +70,8 @@ _QUERYABLE_PARAMS: tuple[str, ...] = (
     "TMO",
     "TML",
     "TDB",
+    "HPS",
+    "THH",
 )
 
 

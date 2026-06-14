@@ -301,6 +301,14 @@ class McIntoshReceiver:
             )
         await self._send_command("TDB", str(level))
 
+    async def headphone_crossfeed_on(self) -> None:
+        """Enable headphone crossfeed."""
+        await self._send_command("THH", "1")
+
+    async def headphone_crossfeed_off(self) -> None:
+        """Disable headphone crossfeed."""
+        await self._send_command("THH", "0")
+
     async def query_state(self) -> None:
         """Query all current state from the receiver.
 
@@ -537,6 +545,10 @@ class McIntoshReceiver:
                 return self._set_state_value("meter_lights", int(value) != 0)
             if key == "TDB":
                 return self._set_state_value("display_brightness", int(value))
+            if key == "HPS":
+                return self._set_state_value("headphones_plugged", int(value) != 0)
+            if key == "THH":
+                return self._set_state_value("headphone_crossfeed", int(value) != 0)
             if key == "SER":
                 return self._set_state_value("serial_number", value)
             if key == "FWV":
