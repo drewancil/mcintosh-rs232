@@ -301,6 +301,11 @@ class McIntoshReceiver:
             )
         await self._send_command("TDB", str(level))
 
+    async def query_headphone_crossfeed(self) -> bool:
+        """Query and return the current headphone crossfeed status."""
+        await self._query_all()
+        return self._state.headphone_crossfeed or False
+
     async def headphone_crossfeed_on(self) -> None:
         """Enable headphone crossfeed."""
         await self._send_command("THH", "1")
