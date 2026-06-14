@@ -8,7 +8,7 @@ from .const import VERSION, InputSource, ToneMode
 
 
 @dataclass
-class AmplifierState:
+class ReceiverState:
     """Current state of the McIntosh receiver."""
 
     version: str = VERSION  # version of the mcintosh_rs232 library
@@ -33,6 +33,6 @@ class AmplifierState:
 
     model: str | None = None
 
-    def copy(self) -> AmplifierState:
+    def copy(self) -> ReceiverState:
         """Return a shallow copy of this state."""
         return replace(self)

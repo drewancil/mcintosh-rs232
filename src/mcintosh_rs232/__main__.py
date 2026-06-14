@@ -1,4 +1,4 @@
-"""CLI for controlling a McIntosh amplifier over RS232.
+"""CLI for controlling a McIntosh receiver over RS232.
 
 Usage::
 
@@ -32,7 +32,7 @@ import argparse
 import asyncio
 import sys
 
-from . import AmplifierState, McIntoshReceiver
+from . import McIntoshReceiver, ReceiverState
 from .const import (
     MAX_BALANCE,
     MAX_BASS,
@@ -72,7 +72,7 @@ def _fmt_enum(val: object | None) -> str:
     return str(val)
 
 
-def _print_state(state: AmplifierState) -> None:
+def _print_state(state: ReceiverState) -> None:
     print()
     print(f"=========== McIntosh-MQTT v{state.version} ============")
     print("         McIntosh Component Status")
@@ -272,7 +272,7 @@ def main() -> None:
     tone_mode_names = ", ".join(m.name.lower() for m in ToneMode)
 
     parser = argparse.ArgumentParser(
-        description="McIntosh RS232 CLI — control and query the amplifier.",
+        description="McIntosh RS232 CLI — control and query the receiver.",
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
     parser.add_argument(
@@ -291,7 +291,7 @@ def main() -> None:
         "--power",
         type=_on_off,
         metavar="on|off",
-        help="Turn the amplifier on or off",
+        help="Turn the receiver on or off",
     )
 
     vol_group = parser.add_mutually_exclusive_group()

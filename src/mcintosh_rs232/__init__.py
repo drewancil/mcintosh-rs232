@@ -24,10 +24,10 @@ from .const import (
 )
 from .protocol import parse_response_packet as _parse_response_packet
 from .receiver import McIntoshReceiver, StateCallback
-from .state import AmplifierState
+from .state import ReceiverState
 
 __all__ = [
-    "AmplifierState",
+    "ReceiverState",
     "BAUD_RATE",
     "COMMAND_TIMEOUT",
     "InputSource",

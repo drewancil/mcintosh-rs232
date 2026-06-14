@@ -31,7 +31,7 @@ from .const import (
     ToneMode,
 )
 from .protocol import PendingQuery, parse_response_packet
-from .state import AmplifierState
+from .state import ReceiverState
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -42,7 +42,7 @@ __all__ = [
     "COMMAND_TIMEOUT",
 ]
 
-StateCallback = Callable[[AmplifierState | None], None]
+StateCallback = Callable[[ReceiverState | None], None]
 
 
 class McIntoshReceiver:
@@ -63,7 +63,7 @@ class McIntoshReceiver:
         self._reader: asyncio.StreamReader | None = None
         self._writer: serialx.SerialStreamWriter[serialx.BaseSerialTransport] | None = None
         self._read_task: asyncio.Task[None] | None = None
-        self._state = AmplifierState()
+        self._state = ReceiverState()
         self._subscribers: list[StateCallback] = []
         self._pending_queries: list[PendingQuery] = []
         self._write_lock = asyncio.Lock()
@@ -72,7 +72,7 @@ class McIntoshReceiver:
         self._batch_changed = False
 
     @property
-    def state(self) -> AmplifierState:
+    def state(self) -> ReceiverState:
         """Return a copy of the current receiver state."""
         return self._state.copy()
 
@@ -115,6 +115,8 @@ class McIntoshReceiver:
         # low-latency ioctl call inside serialx so the connection proceeds
         # without needing special permissions.
         #    serial_linux.TIOCSSERIAL = None
+
+        # Todo: Make the connection kwargs configurable (e.g. for testing with a serial proxy).
 
         connect_kwargs: dict[str, object] = {"baudrate": BAUD_RATE}
         # if sys.platform.startswith("linux"):
@@ -339,6 +341,7 @@ class McIntoshReceiver:
         Registers a pending query on ``PWR`` (which is always present in the
         QRY response) so the caller can ``await`` the round-trip.
         """
+        _LOGGER.debug("Querying full state from receiver")
         assert self._writer is not None
         loop = asyncio.get_running_loop()
         future: asyncio.Future[str] = loop.create_future()

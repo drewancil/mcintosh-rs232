@@ -12,9 +12,9 @@ from conftest import (
 
 from mcintosh_rs232 import (
     _QUERYABLE_PARAMS,
-    AmplifierState,
     InputSource,
     McIntoshReceiver,
+    ReceiverState,
     ToneMode,
     _parse_response_packet,
     format_ascii_bar,
@@ -131,7 +131,7 @@ def test_format_ascii_bar_descending_range() -> None:
 
 
 def test_initial_state_defaults() -> None:
-    state = AmplifierState()
+    state = ReceiverState()
     assert state.power is None
     assert state.volume is None
     assert state.mute is None
@@ -150,7 +150,7 @@ def test_initial_state_defaults() -> None:
 
 
 def test_state_copy_is_independent() -> None:
-    state = AmplifierState(power=True, volume=42, input_source=InputSource.USB)
+    state = ReceiverState(power=True, volume=42, input_source=InputSource.USB)
     copy = state.copy()
     assert copy.power is True
     assert copy.volume == 42
@@ -495,7 +495,7 @@ async def test_set_display_brightness_below_min_raises(
 
 
 async def test_event_volume(receiver: McIntoshReceiver, mock_serial: MockSerialConnection) -> None:
-    states: list[AmplifierState | None] = []
+    states: list[ReceiverState | None] = []
     receiver.subscribe(states.append)
 
     mock_serial.inject_response("(VOL 75)")
@@ -510,7 +510,7 @@ async def test_event_volume(receiver: McIntoshReceiver, mock_serial: MockSerialC
 async def test_event_volume_compact_token_fires_callback(
     receiver: McIntoshReceiver, mock_serial: MockSerialConnection
 ) -> None:
-    states: list[AmplifierState | None] = []
+    states: list[ReceiverState | None] = []
     receiver.subscribe(states.append)
 
     mock_serial.inject_response("(VOL76)")
@@ -601,7 +601,7 @@ async def test_event_no_change_no_notification(
     receiver: McIntoshReceiver, mock_serial: MockSerialConnection
 ) -> None:
     """Injecting the same value should not trigger a subscriber callback."""
-    states: list[AmplifierState | None] = []
+    states: list[ReceiverState | None] = []
     receiver.subscribe(states.append)
 
     # Inject the same volume that is already in state (50 from fixture).
@@ -632,7 +632,7 @@ async def test_event_unknown_key_ignored(
 async def test_subscribe_unsubscribe(
     receiver: McIntoshReceiver, mock_serial: MockSerialConnection
 ) -> None:
-    states: list[AmplifierState | None] = []
+    states: list[ReceiverState | None] = []
     unsubscribe = receiver.subscribe(states.append)
 
     mock_serial.inject_response("(VOL 60)")
@@ -650,7 +650,7 @@ async def test_subscribe_unsubscribe(
 async def test_subscriber_receives_none_on_disconnect(
     receiver: McIntoshReceiver,
 ) -> None:
-    states: list[AmplifierState | None] = []
+    states: list[ReceiverState | None] = []
     receiver.subscribe(states.append)
 
     await receiver.disconnect()

@@ -104,7 +104,7 @@ state.da_version          # str or None
 
 ### Event subscription
 
-Subscribe to state changes to react in real-time. Callbacks receive an `AmplifierState` snapshot on updates, or `None` when the connection is lost.
+Subscribe to state changes to react in real-time. Callbacks receive an `ReceiverState` snapshot on updates, or `None` when the connection is lost.
 
 ```python
 def on_state_change(state):
