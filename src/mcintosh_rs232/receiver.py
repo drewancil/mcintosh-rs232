@@ -57,8 +57,25 @@ class McIntoshReceiver:
         await receiver.disconnect()
     """
 
-    def __init__(self, port: str, max_volume: int = MAX_VOLUME) -> None:
+    def __init__(
+        self,
+        port: str,
+        baudrate: int = BAUD_RATE,
+        noisekey: str | None = None,
+        max_volume: int = MAX_VOLUME,
+    ) -> None:
+        """Initialize the receiver controller.
+
+        Arguments:
+            port: Serial port to connect to (e.g. ``/dev/serial0`` or ``COM3``).
+            baudrate: Baud rate for the serial connection (default: 115200).
+            noisekey: Optional base64-encoded noise key for encrypting the connection
+                to the ESPHOME Serial Proxy.
+            max_volume: Maximum allowed volume (default: 100).
+        """
         self._port = port
+        self._baudrate = baudrate
+        self._noisekey = noisekey
         self._max_volume = max_volume
         self._reader: asyncio.StreamReader | None = None
         self._writer: serialx.SerialStreamWriter[serialx.BaseSerialTransport] | None = None
@@ -116,14 +133,15 @@ class McIntoshReceiver:
         # without needing special permissions.
         #    serial_linux.TIOCSSERIAL = None
 
-        # Todo: Make the connection kwargs configurable (e.g. for testing with a serial proxy).
-
-        connect_kwargs: dict[str, object] = {"baudrate": BAUD_RATE}
         # if sys.platform.startswith("linux"):
         #    connect_kwargs["low_latency"] = False
+        connect_kwargs: dict[str, object] = {"baudrate": self._baudrate}
+
         if True:
-            connect_kwargs["key"] = "bhMn8ROVmBv46hf6PxoR1zcRXsNW59McTrOzsYpXluI="
-            connect_kwargs["url"] = "esphome://192.168.4.160:6053/?port_name=mcintosh_proxy"
+            connect_kwargs["url"] = self._port
+            if self._noisekey:
+                # connect_kwargs["url"] = "esphome://192.168.4.160:6053/?port_name=mcintosh_proxy"
+                connect_kwargs["key"] = self._noisekey
 
         self._reader, self._writer = await serialx.open_serial_connection(
             **connect_kwargs,
