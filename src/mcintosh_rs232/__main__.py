@@ -138,7 +138,9 @@ def _on_off(value: str) -> bool:
 
 
 async def _main(args: argparse.Namespace) -> int:
-    receiver = McIntoshReceiver(args.port, max_volume=args.max_volume)
+    receiver = McIntoshReceiver(
+        args.port, baudrate=args.baudrate, max_volume=args.max_volume, noise_key=args.noise_key
+    )
     try:
         print(f"Connecting to {args.port} ...")
         await receiver.connect()
@@ -279,6 +281,20 @@ def main() -> None:
         "--port", type=str, required=True, help="Serial port (e.g. /dev/ttyS0 or COM3)"
     )
 
+    parser.add_argument(
+        "--noise_key",
+        type=str,
+        required=True,
+        help="Base64-encoded noise key for encrypting the connection "
+        "(e.g. bhMn8ROVmBv46hf6PxoR1zcRXsNW59McTrOzsYpXluI=)",
+    )
+
+    parser.add_argument(
+        "--baudrate",
+        type=int,
+        required=False,
+        help="Baud rate for the serial connection (e.g. 115200, default: 115200)",
+    )
     parser.add_argument(
         "--max-volume",
         type=int,

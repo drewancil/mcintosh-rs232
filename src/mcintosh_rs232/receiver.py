@@ -61,7 +61,7 @@ class McIntoshReceiver:
         self,
         port: str,
         baudrate: int = BAUD_RATE,
-        noisekey: str | None = None,
+        noise_key: str | None = None,
         max_volume: int = MAX_VOLUME,
     ) -> None:
         """Initialize the receiver controller.
@@ -75,7 +75,7 @@ class McIntoshReceiver:
         """
         self._port = port
         self._baudrate = baudrate
-        self._noisekey = noisekey
+        self._noise_key = noise_key
         self._max_volume = max_volume
         self._reader: asyncio.StreamReader | None = None
         self._writer: serialx.SerialStreamWriter[serialx.BaseSerialTransport] | None = None
@@ -135,13 +135,13 @@ class McIntoshReceiver:
 
         # if sys.platform.startswith("linux"):
         #    connect_kwargs["low_latency"] = False
-        connect_kwargs: dict[str, object] = {"baudrate": self._baudrate}
-
-        if True:
-            connect_kwargs["url"] = self._port
-            if self._noisekey:
-                # connect_kwargs["url"] = "esphome://192.168.4.160:6053/?port_name=mcintosh_proxy"
-                connect_kwargs["key"] = self._noisekey
+        connect_kwargs: dict[str, object] = {
+            "baudrate": self._baudrate,
+        }
+        connect_kwargs["url"] = self._port
+        if self._noise_key is not None:
+            # connect_kwargs["url"] = "esphome://192.168.4.160:6053/?port_name=mcintosh_proxy"
+            connect_kwargs["key"] = self._noise_key
 
         self._reader, self._writer = await serialx.open_serial_connection(
             **connect_kwargs,
