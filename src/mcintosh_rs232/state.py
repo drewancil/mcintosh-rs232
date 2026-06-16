@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, replace
 
-from .const import VERSION, InputSource, ToneMode
+from .const import VERSION, IconName, InputSource, ToneMode
 
 
 @dataclass
@@ -30,8 +30,8 @@ class ReceiverState:
     firmware_version: str | None = None
     serial_number: str | None = None
     da_version: str | None = None
-
     model: str | None = None
+    icon: IconName = IconName.UNKNOWN
 
     def copy(self) -> ReceiverState:
         """Return a shallow copy of this state."""

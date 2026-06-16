@@ -98,3 +98,22 @@ class ToneMode(Enum):
 
     STEREO = 0
     MONO = 1
+
+
+class IconName(Enum):
+    """MDI icons for each source type."""
+
+    BALANCED = "mdi:audio-input-xlr"
+    UNBALANCED1 = "mdi:audio-input-rca"
+    UNBALANCED2 = "mdi:audio-input-rca"
+    UNBALANCED3 = "mdi:audio-input-rca"
+    UNBALANCED4 = "mdi:audio-input-rca"
+    PHONO = "mdi:record-player"
+    COAX1 = "ios:cable-coaxial"
+    COAX2 = "ios:cable-coaxial"
+    OPTICAL1 = "mdi:toslink"
+    OPTICAL2 = "mdi:toslink"
+    USB = "mdi:usb-port"
+    MCT = "mdi:disc-player"
+    HDMI = "mdi:hdmi-port"
+    UNKNOWN = "mdi:help-circle-outline"

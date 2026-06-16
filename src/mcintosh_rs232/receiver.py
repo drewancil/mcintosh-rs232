@@ -27,6 +27,7 @@ from .const import (
     POWER_ON_SELFTEST_DELAY,
     POWER_ON_TIMEOUT,
     TERMCHAR,
+    IconName,
     InputSource,
     ToneMode,
 )
@@ -35,7 +36,7 @@ from .state import ReceiverState
 
 _LOGGER = logging.getLogger(__name__)
 
-# Explicitly listed so test code can override them at module level.
+# explicitly listed so test code can override them at module level
 __all__ = [
     "McIntoshReceiver",
     "StateCallback",
@@ -46,16 +47,7 @@ StateCallback = Callable[[ReceiverState | None], None]
 
 
 class McIntoshReceiver:
-    """Async controller for a McIntosh receiver over RS232.
-
-    Typical usage::
-
-        receiver = McIntoshReceiver("/dev/serial0")
-        await receiver.connect()
-        await receiver.query_state()
-        print(receiver.state)
-        await receiver.disconnect()
-    """
+    """Async controller for a McIntosh receiver over RS232."""
 
     def __init__(
         self,
@@ -67,7 +59,7 @@ class McIntoshReceiver:
         """Initialize the receiver controller.
 
         Arguments:
-            port: Serial port to connect to (e.g. ``/dev/serial0`` or ``COM3``).
+            port: Serial port to connect to (e.g. /dev/serial0).
             baudrate: Baud rate for the serial connection (default: 115200).
             noisekey: Optional base64-encoded noise key for encrypting the connection
                 to the ESPHOME Serial Proxy.
@@ -95,7 +87,7 @@ class McIntoshReceiver:
 
     @property
     def connected(self) -> bool:
-        """Return ``True`` if currently connected to the receiver."""
+        """Return True if currently connected to the receiver."""
         return self._connected
 
     @property
@@ -108,11 +100,16 @@ class McIntoshReceiver:
         """Return the configured maximum volume."""
         return self._max_volume
 
+    @property
+    def icon(self) -> str:
+        """Return the current receiver icon."""
+        return self._state.icon.value
+
     def subscribe(self, callback: StateCallback) -> Callable[[], None]:
         """Subscribe to state changes.
 
-        The callback receives a copy of :class:`receiverState` on every
-        change, and ``None`` when the connection is lost.  Returns an
+        The callback receives a copy of ReceiverState on every
+        change, and None when the connection is lost.  Returns an
         unsubscribe callable.
         """
         self._subscribers.append(callback)
@@ -121,7 +118,7 @@ class McIntoshReceiver:
     async def connect(self) -> None:
         """Open the serial connection and verify the receiver is responding.
 
-        Raises :exc:`ConnectionError` if the receiver does not respond within
+        Raises ConnectionError if the receiver does not respond within
         the command timeout.
         """
         # if sys.platform.startswith("linux"):
@@ -155,7 +152,7 @@ class McIntoshReceiver:
             await self.disconnect()
             raise ConnectionError(f"No response from receiver on {self._port}") from None
 
-        # Enable unsolicited status updates from the receiver.
+        # enable unsolicited status updates from the receiver.
         await self._send_command("STA", "1")
 
         _LOGGER.info("Connected to McIntosh receiver on %s", self._port)
@@ -182,7 +179,7 @@ class McIntoshReceiver:
         return self._state.power is True
 
     async def set_volume(self, volume: int) -> None:
-        """Set the volume level (``MIN_VOLUME`` to ``max_volume``)."""
+        """Set the volume level (MIN_VOLUME to max_volume)."""
         if not MIN_VOLUME <= volume <= self._max_volume:
             raise ValueError(f"Volume must be between {MIN_VOLUME} and {self._max_volume}")
         await self._send_command("VOL", str(volume))
@@ -235,7 +232,7 @@ class McIntoshReceiver:
         )
 
     async def set_balance(self, balance: int) -> None:
-        """Set balance (``MIN_BALANCE`` to ``MAX_BALANCE``).
+        """Set balance (MIN_BALANCE to MAX_BALANCE).
 
         Negative values pan left; positive values pan right.
         """
@@ -262,7 +259,7 @@ class McIntoshReceiver:
         return self._state.tone_enabled is True
 
     async def set_bass(self, bass: int) -> None:
-        """Set bass level (``MIN_BASS`` to ``MAX_BASS``)."""
+        """Set bass level (MIN_BASS to MAX_BASS)."""
         if not MIN_BASS <= bass <= MAX_BASS:
             raise ValueError(f"Bass must be between {MIN_BASS} and {MAX_BASS}")
         await self._send_command("TTB", str(bass))
@@ -273,7 +270,7 @@ class McIntoshReceiver:
         return self._state.bass or 0
 
     async def set_treble(self, treble: int) -> None:
-        """Set treble level (``MIN_TREBLE`` to ``MAX_TREBLE``)."""
+        """Set treble level (MIN_TREBLE to MAX_TREBLE)."""
         if not MIN_TREBLE <= treble <= MAX_TREBLE:
             raise ValueError(f"Treble must be between {MIN_TREBLE} and {MAX_TREBLE}")
         await self._send_command("TTT", str(treble))
@@ -284,7 +281,7 @@ class McIntoshReceiver:
         return self._state.treble or 0
 
     async def set_input_trim(self, trim: int) -> None:
-        """Set input trim (``MIN_INPUT_TRIM`` to ``MAX_INPUT_TRIM``)."""
+        """Set input trim (MIN_INPUT_TRIM to MAX_INPUT_TRIM)."""
         if not MIN_INPUT_TRIM <= trim <= MAX_INPUT_TRIM:
             raise ValueError(f"Input trim must be between {MIN_INPUT_TRIM} and {MAX_INPUT_TRIM}")
         await self._send_command("TIN", str(trim))
@@ -312,8 +309,8 @@ class McIntoshReceiver:
         await self._send_command("TML", "0")
 
     async def set_display_brightness(self, level: int) -> None:
-        """Set display brightness (``MIN_DISPLAY_BRIGHTNESS`` to
-        ``MAX_DISPLAY_BRIGHTNESS``)."""
+        """Set display brightness (MIN_DISPLAY_BRIGHTNESS to
+        MAX_DISPLAY_BRIGHTNESS)."""
         if not MIN_DISPLAY_BRIGHTNESS <= level <= MAX_DISPLAY_BRIGHTNESS:
             raise ValueError(
                 f"Display brightness must be between "
@@ -337,7 +334,7 @@ class McIntoshReceiver:
     async def query_state(self) -> None:
         """Query all current state from the receiver.
 
-        Sends ``(QRY)`` which returns the full state in a single response.
+        Sends (QRY) which returns the full state in a single response.
         Subscriber notifications are suppressed while the query runs and
         fired once at the end if any value changed.
         """
@@ -346,7 +343,7 @@ class McIntoshReceiver:
         try:
             await self._query_all()
         except TimeoutError as e:
-            _LOGGER.debug("No response to commaqnd from receiver: %s", e)
+            _LOGGER.debug("No response to command from receiver: %s", e)
         finally:
             self._batching = False
 
@@ -354,10 +351,10 @@ class McIntoshReceiver:
             self._notify_subscribers()
 
     async def _query_all(self) -> None:
-        """Send ``(QRY)`` and wait for the receiver's full state response.
+        """Send (QRY) and wait for the receiver's full state response.
 
-        Registers a pending query on ``PWR`` (which is always present in the
-        QRY response) so the caller can ``await`` the round-trip.
+        Registers a pending query on (PWR) (which is always present in the
+        (QRY) response) so the caller can await the round-trip.
         """
         _LOGGER.debug("Querying full state from receiver")
         assert self._writer is not None
@@ -384,7 +381,7 @@ class McIntoshReceiver:
     async def _send_command_and_wait(
         self, key: str, value: str, timeout: float = COMMAND_TIMEOUT
     ) -> None:
-        """Send a ``(KEY VALUE)`` command and wait for the echo from the amp."""
+        """Send a (KEY VALUE) command and wait for the echo from the amp."""
         assert self._writer is not None
         loop = asyncio.get_running_loop()
         future: asyncio.Future[str] = loop.create_future()
@@ -407,7 +404,7 @@ class McIntoshReceiver:
                 self._pending_queries.remove(pending)
 
     async def _send_command(self, key: str, value: str) -> None:
-        """Write a ``(KEY VALUE)`` command to the receiver."""
+        """Write a (KEY VALUE) command to the receiver."""
         assert self._writer is not None
         msg = f"({key} {value})".encode("ascii")
         _LOGGER.debug("Sending: %s", msg)
@@ -421,7 +418,7 @@ class McIntoshReceiver:
             raise
 
     async def _query(self, key: str) -> str:
-        """Send a ``(KEY)`` query and wait for the matching response value."""
+        """Send a (KEY) query and wait for the matching response value."""
         assert self._writer is not None
         loop = asyncio.get_running_loop()
         future: asyncio.Future[str] = loop.create_future()
@@ -466,7 +463,9 @@ class McIntoshReceiver:
         self._notify_subscribers()
 
     async def _read_loop(self) -> None:
-        """Continuously read and process packets from the receiver."""
+        """Continuously read and process packets from the receiver that communicate
+        its current state or change in state.
+        """
         assert self._reader is not None
         buf = b""
 
@@ -474,8 +473,8 @@ class McIntoshReceiver:
             try:
                 data = await asyncio.wait_for(self._reader.read(256), timeout=0.2)
             except TimeoutError:
-                # No data for 200ms — flush any unterminated packet in the buffer.
-                # This handles the power-off case where the amp responds to (QRY)
+                # no data for 200ms — flush any unterminated packet in the buffer.
+                # this handles the power-off case where the amp responds to (QRY)
                 # without a trailing null terminator.
                 if buf:
                     text = buf.lstrip(TERMCHAR).decode("ascii", errors="replace").strip()
@@ -510,18 +509,21 @@ class McIntoshReceiver:
 
     @staticmethod
     def _set_attr_value(target: object, attr: str, new_value: object) -> bool:
-        """Set an attribute only when its value changes. Returns ``True`` if changed."""
+        """Set an attribute only when its value changes. Returns True if changed."""
         if getattr(target, attr) == new_value:
             return False
         setattr(target, attr, new_value)
         return True
 
     def _set_state_value(self, attr: str, new_value: object) -> bool:
-        """Set an :class:`receiverState` attribute only when its value changes."""
+        """Set an receiverState attribute only when its value changes."""
         return self._set_attr_value(self._state, attr, new_value)
 
     def _process_packet(self, packet: str) -> None:
-        """Parse a response packet and dispatch each token to :meth:`_process_token`."""
+        """Parse a response packet from the receiver that communicates a state change or
+        current state for anywhere between a single entity or all the entities.  Break the packet
+        into key/value tokens and dispatch each one to _process_token.
+        """
         _LOGGER.debug("Received packet: %s", packet)
         tokens = parse_response_packet(packet)
         changed = False
@@ -530,7 +532,7 @@ class McIntoshReceiver:
             if self._process_token(key, value):
                 changed = True
 
-            # Resolve any pending query that is waiting for this key.
+            # resolve any pending query that is waiting for this key.
             for pending in list(self._pending_queries):
                 if pending.key == key and not pending.future.done():
                     pending.future.set_result(value)
@@ -542,9 +544,9 @@ class McIntoshReceiver:
                 self._notify_subscribers()
 
     def _process_token(self, key: str, value: str) -> bool:
-        """Update state for a single ``(key, value)`` token.
+        """Update state for a single token/entity token.
 
-        Returns ``True`` if state changed.
+        Returns True if state changed.
         """
         try:
             if key == "PWR":
@@ -554,6 +556,7 @@ class McIntoshReceiver:
             if key == "MUT":
                 return self._set_state_value("mute", int(value) != 0)
             if key == "INP":
+                self._set_state_value("icon", IconName(InputSource(int(value)).name))
                 return self._set_state_value("input_source", InputSource(int(value)))
             if key == "TBA":
                 return self._set_state_value("balance", int(value))
