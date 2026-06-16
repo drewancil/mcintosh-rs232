@@ -81,6 +81,7 @@ def _print_state(state: ReceiverState) -> None:
     print(f"  Volume:            {_fmt_int(state.volume)}")
     print(f"  Mute:              {_fmt_bool(state.mute)}")
     print(f"  Input Source:      {state.input_source.name if state.input_source else '?'}")
+    print(f"  Icon:              {state.icon.name if state.icon else '?'}")
     print(f"  Balance:           {_fmt_int(state.balance)}")
     print()
     print(f"  Tone Mode:         {_fmt_enum(state.tone_mode)}")
