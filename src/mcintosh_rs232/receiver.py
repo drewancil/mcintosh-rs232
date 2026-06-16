@@ -345,8 +345,8 @@ class McIntoshReceiver:
         self._batch_changed = False
         try:
             await self._query_all()
-        except TimeoutError:
-            _LOGGER.debug("No response to QRY")
+        except TimeoutError as e:
+            _LOGGER.debug("No response to commaqnd from receiver: %s", e)
         finally:
             self._batching = False
 
