@@ -103,7 +103,7 @@ class McIntoshReceiver:
     @property
     def icon(self) -> str:
         """Return the current receiver icon."""
-        return self._state.icon.value
+        return self.state.icon
 
     def subscribe(self, callback: StateCallback) -> Callable[[], None]:
         """Subscribe to state changes.
@@ -218,18 +218,14 @@ class McIntoshReceiver:
         await self._query_all()
         return self._state.mute is True
 
-    async def select_input(self, source: InputSource) -> None:
+    async def select_input(self, source: str) -> None:
         """Select an input source."""
-        await self._send_command("INP", str(source.value))
+        await self._send_command("INP", str(InputSource[source].value))
 
     async def query_input(self) -> InputSource:
         """Query and return the current input source."""
         await self._query_all()
-        return (
-            InputSource[self._state.input_source.name]
-            if self._state.input_source
-            else InputSource(1)
-        )
+        return InputSource[self._state.input_source] if self._state.input_source else InputSource(1)
 
     async def set_balance(self, balance: int) -> None:
         """Set balance (MIN_BALANCE to MAX_BALANCE).
@@ -298,7 +294,7 @@ class McIntoshReceiver:
     async def query_tone_mode(self) -> ToneMode:
         """Query and return the current tone mode."""
         await self._query_all()
-        return self._state.tone_mode or ToneMode(0)
+        return ToneMode[self._state.tone_mode] if self._state.tone_mode else ToneMode(0)
 
     async def meter_lights_on(self) -> None:
         """Turn the VU meter lights on."""
@@ -556,8 +552,8 @@ class McIntoshReceiver:
             if key == "MUT":
                 return self._set_state_value("mute", int(value) != 0)
             if key == "INP":
-                self._set_state_value("icon", IconName(InputSource(int(value)).name))
-                return self._set_state_value("input_source", InputSource(int(value)))
+                self._set_state_value("icon", IconName[InputSource(int(value)).name].value)
+                return self._set_state_value("input_source", InputSource(int(value)).name)
             if key == "TBA":
                 return self._set_state_value("balance", int(value))
             if key == "TTN":

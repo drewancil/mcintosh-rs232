@@ -80,8 +80,8 @@ def _print_state(state: ReceiverState) -> None:
     print(f"  Power:             {_fmt_bool(state.power)}")
     print(f"  Volume:            {_fmt_int(state.volume)}")
     print(f"  Mute:              {_fmt_bool(state.mute)}")
-    print(f"  Input Source:      {state.input_source.name if state.input_source else '?'}")
-    print(f"  Icon:              {state.icon.name if state.icon else '?'}")
+    print(f"  Input Source:      {state.input_source if state.input_source else '?'}")
+    print(f"  Icon:              {state.icon if state.icon else '?'}")
     print(f"  Balance:           {_fmt_int(state.balance)}")
     print()
     print(f"  Tone Mode:         {_fmt_enum(state.tone_mode)}")
@@ -101,15 +101,15 @@ def _print_state(state: ReceiverState) -> None:
     print()
     f_bright: int = int(state.display_brightness * 4) if state.display_brightness is not None else 0
     print(
-        f"  Display Bright:    {
+        f"  Display Brightness:   {
             format_ascii_bar(
                 range(MIN_DISPLAY_BRIGHTNESS * 4, MAX_DISPLAY_BRIGHTNESS * 4), f_bright, marker='|'
             )
         } "
         f"{_fmt_int(state.display_brightness)}"
     )
-    print(f"  VU Backlights:          {_fmt_bool(state.meter_lights)}")
     print()
+    print(f"  VU Backlights:          {_fmt_bool(state.meter_lights)}")
     print(f"  Headphones Plugged:     {_fmt_bool(state.headphones_plugged)}")
     print(f"  Headphone Crossfeed:    {_fmt_bool(state.headphone_crossfeed)}")
 
@@ -194,7 +194,7 @@ async def _main(args: argparse.Namespace) -> int:
                 print(f"Unknown input {args.input!r}. Valid inputs: {names}", file=sys.stderr)
                 return 1
             print(f"Setting input to {source.name} ...")
-            await receiver.select_input(source)
+            await receiver.select_input(source.name)
 
         if args.balance is not None:
             any_command = True
