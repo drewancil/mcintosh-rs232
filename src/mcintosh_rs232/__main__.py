@@ -75,18 +75,20 @@ def _fmt_enum(val: object | None) -> str:
 def _print_state(state: ReceiverState) -> None:
     print()
     print(f"=========== McIntosh-MQTT v{state.version} ============")
-    print("         McIntosh Component Status")
     print()
-    print(f"  Power:             {_fmt_bool(state.power)}")
-    print(f"  Volume:            {_fmt_int(state.volume)}")
-    print(f"  Mute:              {_fmt_bool(state.mute)}")
-    print(f"  Input Source:      {state.input_source if state.input_source else '?'}")
-    print(f"  Icon:              {state.icon if state.icon else '?'}")
-    print(f"  Balance:           {_fmt_int(state.balance)}")
-    print()
-    print(f"  Tone Mode:         {_fmt_enum(state.tone_mode)}")
-    print(f"  Tone Controls:     {_fmt_bool(state.tone_enabled)}")
-    print()
+    print("------ McIntosh Component Status ------")
+
+    print(f"  Power:                  {_fmt_bool(state.power)}")
+    print(f"  Volume:                 {_fmt_int(state.volume)}")
+    print(f"  Mute:                   {_fmt_bool(state.mute)}")
+    print(f"  Input Source:           {state.input_source if state.input_source else '?'}")
+    print(f"  Icon:                   {state.icon if state.icon else '?'}")
+    print(f"  Balance:                {_fmt_int(state.balance)}")
+    print(f"  VU Backlights:          {_fmt_bool(state.meter_lights)}")
+    print(f"  Headphones Plugged:     {_fmt_bool(state.headphones_plugged)}")
+    print(f"  Headphone Crossfeed:    {_fmt_bool(state.headphone_crossfeed)}")
+    print(f"  Tone Mode:              {_fmt_enum(state.tone_mode)}")
+    print(f"  Tone Controls:          {_fmt_bool(state.tone_enabled)}")
     print()
     f_bass: int = int(state.bass * 2) if state.bass is not None else 0
     f_treb: int = int(state.treble * 2) if state.treble is not None else 0
@@ -98,7 +100,6 @@ def _print_state(state: ReceiverState) -> None:
         f"{_fmt_int(f_input_trim)}"
     )
     print()
-    print()
     f_bright: int = int(state.display_brightness * 4) if state.display_brightness is not None else 0
     print(
         f"  Display Brightness:   {
@@ -108,25 +109,20 @@ def _print_state(state: ReceiverState) -> None:
         } "
         f"{_fmt_int(state.display_brightness)}"
     )
-    print()
-    print(f"  VU Backlights:          {_fmt_bool(state.meter_lights)}")
-    print(f"  Headphones Plugged:     {_fmt_bool(state.headphones_plugged)}")
-    print(f"  Headphone Crossfeed:    {_fmt_bool(state.headphone_crossfeed)}")
 
     if state.serial_number or state.firmware_version or state.da_version or state.model:
         print()
         print("--------- Device Info ---------")
 
+        print(f"  Manufacturer:      {state.manufacturer}")
         if state.model:
             print(f"  Model:             {state.model}")
-        print(f"  Manufacturer:      {state.manufacturer}")
         if state.serial_number:
-            print(f"  Serial Number:     {state.serial_number}")
+            print(f"  Serial:            {state.serial_number}")
         if state.firmware_version:
             print(f"  Firmware:          {state.firmware_version}")
         if state.da_version:
-            print(f"  DA Version:        {state.da_version}")
-    print()
+            print(f"  DAC Version:       {state.da_version}")
 
 
 def _on_off(value: str) -> bool:
@@ -222,8 +218,8 @@ async def _main(args: argparse.Namespace) -> int:
 
         if args.tone_mode is not None:
             any_command = True
-            mode = ToneMode[args.tone_mode.upper()]
-            print(f"Setting tone mode to {mode.name} ...")
+            mode = ToneMode[args.tone_mode.upper()].name
+            print(f"Setting tone mode to {mode} ...")
             await receiver.set_tone_mode(mode)
 
         if args.input_trim is not None:

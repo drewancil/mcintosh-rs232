@@ -287,9 +287,9 @@ class McIntoshReceiver:
         await self._query_all()
         return self._state.input_trim or 0
 
-    async def set_tone_mode(self, mode: ToneMode) -> None:
+    async def set_tone_mode(self, mode: str) -> None:
         """Set tone mode (stereo or mono)."""
-        await self._send_command("TMO", str(mode.value))
+        await self._send_command("TMO", str(ToneMode[mode].value))
 
     async def query_tone_mode(self) -> ToneMode:
         """Query and return the current tone mode."""
