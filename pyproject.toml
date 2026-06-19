@@ -4,9 +4,13 @@ version = "0.1.13"
 description = "Async library to control McIntosh audio equipment over RS232"
 readme = "README.md"
 license = "MIT"
-requires-python = ">=3.12"
+authors = [
+  { name="Andrew Embury" },
+]
+requires-python = ">=3.13"
 dependencies = [
     "serialx[esphome]>=1.2.0",
+
 ]
 classifiers = [
     "Development Status :: 3 - Alpha",
@@ -20,11 +24,15 @@ classifiers = [
     "Framework :: AsyncIO",
 ]
 
+[project.urls]
+Homepage = "https://github.com/drewancil/mcintosh-rs232"
+Issues = "https://github.com/drewancil/mcintosh-rs232/issues"
+
 [project.scripts]
 mcintosh-rs232 = "mcintosh_rs232.__main__:main"
 
 [build-system]
-requires = ["uv_build>=0.8.4,<0.9.0"]
+requires = ["uv_build >= 0.11.21, <0.12.0"]
 build-backend = "uv_build"
 
 [dependency-groups]
