@@ -571,9 +571,9 @@ class McIntoshReceiver:
             if key == "TDB":
                 return self._set_state_value("display_brightness", int(value))
             if key == "HPS":
-                return self._set_state_value("headphones_plugged", int(value) != 0)
+                return self._set_state_value("headphones_plugged", int(value))
             if key == "THH":
-                return self._set_state_value("headphone_crossfeed", int(value) != 0)
+                return self._set_state_value("headphone_crossfeed", int(value))
             if key == "SER":
                 return self._set_state_value("serial_number", value)
             if key == "FWV":

@@ -1,11 +1,11 @@
 [project]
 name = "mcintosh-rs232"
-version = "0.1.13"
+version = "0.1.14"
 description = "Async library to control McIntosh audio equipment over RS232"
 readme = "README.md"
 license = "MIT"
 authors = [
-  { name="Andrew Embury" },
+    { name="Andrew Embury" },
 ]
 requires-python = ">=3.13"
 dependencies = [
