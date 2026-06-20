@@ -540,7 +540,8 @@ class McIntoshReceiver:
                 self._notify_subscribers()
 
     def _process_token(self, key: str, value: str) -> bool:
-        """Update state for a single token/entity token.
+        """Process single token update from the receiver and update the
+            state object.
 
         Returns True if state changed.
         """
@@ -571,9 +572,9 @@ class McIntoshReceiver:
             if key == "TDB":
                 return self._set_state_value("display_brightness", int(value))
             if key == "HPS":
-                return self._set_state_value("headphones_plugged", int(value))
+                return self._set_state_value("headphones_plugged", int(value) != 0)
             if key == "THH":
-                return self._set_state_value("headphone_crossfeed", int(value))
+                return self._set_state_value("headphone_crossfeed", int(value) != 0)
             if key == "SER":
                 return self._set_state_value("serial_number", value)
             if key == "FWV":
