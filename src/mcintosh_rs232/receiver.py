@@ -527,18 +527,12 @@ class McIntoshReceiver:
         for key, value in tokens.items():
             if self._process_token(key, value):
                 changed = True
-
+                del changed
             # resolve any pending query that is waiting for this key.
             for pending in list(self._pending_queries):
                 if pending.key == key and not pending.future.done():
                     pending.future.set_result(value)
 
-        if changed:
-            if self._batching:
-                self._batch_changed = True
-            else:
-                # self._notify_subscribers()
-                pass
         self._notify_subscribers()
 
     def _process_token(self, key: str, value: str) -> bool:
