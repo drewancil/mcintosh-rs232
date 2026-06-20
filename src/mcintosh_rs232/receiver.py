@@ -537,7 +537,9 @@ class McIntoshReceiver:
             if self._batching:
                 self._batch_changed = True
             else:
-                self._notify_subscribers()
+                # self._notify_subscribers()
+                pass
+        self._notify_subscribers()
 
     def _process_token(self, key: str, value: str) -> bool:
         """Process single token update from the receiver and update the
